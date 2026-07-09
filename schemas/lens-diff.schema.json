@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lenspub.org/ns/schemas/lens-diff.schema.json",
+  "title": "Lens Diff",
+  "description": "A structured, semantic comparison between two Lens Manifests (or two versions of one). Diffs operate on history-free manifest cores only (ADR-0006) and therefore can never expose browsing history. Media type: application/lens-diff+json (provisional).",
+  "type": "object",
+  "required": ["lenspub", "type", "from", "to", "changes"],
+  "additionalProperties": false,
+  "properties": {
+    "lenspub": { "type": "string", "const": "0.1" },
+    "type": { "type": "string", "const": "LensDiff" },
+    "from": { "$ref": "#/$defs/manifestRef" },
+    "to": { "$ref": "#/$defs/manifestRef" },
+    "generated": { "type": "string", "format": "date-time" },
+    "comparison": {
+      "description": "What kind of comparison this is.",
+      "type": "string",
+      "enum": ["self-over-time", "self-vs-other", "subscription-review", "proposal-preview"]
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["op", "path", "category", "impact", "summary"],
+        "additionalProperties": false,
+        "properties": {
+          "op": { "type": "string", "enum": ["add", "remove", "replace"] },
+          "path": { "description": "JSON Pointer (RFC 6901) into the Lens Manifest.", "type": "string" },
+          "before": { "description": "Value at path in 'from' (absent for add)." },
+          "after": { "description": "Value at path in 'to' (absent for remove)." },
+          "category": {
+            "type": "string",
+            "enum": ["metadata", "domains", "priorities", "sources", "presentation", "adaptation", "privacy", "subscriptions", "extensions"]
+          },
+          "impact": {
+            "description": "Impact classification per the Adaptation Model specification.",
+            "type": "string",
+            "enum": ["trivial", "minor", "major"]
+          },
+          "summary": { "description": "Human-readable, one-sentence description of the change. Diffs are for people first.", "type": "string" }
+        }
+      }
+    },
+    "totals": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "added": { "type": "integer", "minimum": 0 },
+        "removed": { "type": "integer", "minimum": 0 },
+        "replaced": { "type": "integer", "minimum": 0 },
+        "highestImpact": { "type": "string", "enum": ["none", "trivial", "minor", "major"] }
+      }
+    }
+  },
+  "$defs": {
+    "manifestRef": {
+      "type": "object",
+      "required": ["lensVersion"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "name": { "type": "string" },
+        "lensVersion": { "type": "string" },
+        "hash": { "description": "Content hash of the referenced manifest version.", "type": "string" }
+      }
+    }
+  }
+}

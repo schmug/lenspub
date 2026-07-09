@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lenspub.org/ns/schemas/interpretation-result.schema.json",
+  "title": "Interpretation Result",
+  "description": "The structured output of a Lens Engine for one content target: overlay annotations (a profile of the W3C Web Annotation Data Model, ADR-0002), each with a reasoning trace, plus the mandatory reproducibility envelope (ADR-0004). Interpretation Results are device-local by default; they contain content references and are therefore never part of a shareable lens.",
+  "type": "object",
+  "required": ["lenspub", "type", "target", "lens", "envelope", "annotations"],
+  "additionalProperties": false,
+  "properties": {
+    "lenspub": { "type": "string", "const": "0.1" },
+    "type": { "type": "string", "const": "InterpretationResult" },
+    "target": {
+      "description": "The content this result interprets.",
+      "type": "object",
+      "required": ["source"],
+      "additionalProperties": false,
+      "properties": {
+        "source": { "type": "string", "format": "uri" },
+        "title": { "type": "string" },
+        "contentHash": { "description": "Hash of the rendered text content interpreted, for drift detection on revisit.", "type": "string" }
+      }
+    },
+    "lens": {
+      "description": "Exactly which lens version produced this result.",
+      "type": "object",
+      "required": ["lensVersion"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "format": "uri" },
+        "lensVersion": { "type": "string" },
+        "hash": { "type": "string" }
+      }
+    },
+    "envelope": { "$ref": "#/$defs/reproducibilityEnvelope" },
+    "annotations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/overlayAnnotation" }
+    }
+  },
+  "$defs": {
+    "reproducibilityEnvelope": {
+      "description": "Makes engine and model drift visible rather than silent (ADR-0004). REQUIRED on every result.",
+      "type": "object",
+      "required": ["engine", "execution"],
+      "additionalProperties": false,
+      "properties": {
+        "engine": {
+          "type": "object",
+          "required": ["id", "version"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "version": { "type": "string" },
+            "capabilityTier": { "type": "string", "enum": ["rule-based", "local-model", "hosted-model", "hybrid"] }
+          }
+        },
+        "execution": {
+          "type": "object",
+          "required": ["location"],
+          "additionalProperties": false,
+          "properties": {
+            "location": {
+              "description": "Whether interpretation ran on-device or crossed a trust boundary (ADR-0005).",
+              "type": "string",
+              "enum": ["local", "remote"]
+            },
+            "optInScope": { "description": "Domain Scope id under which a remote execution was authorized. REQUIRED when location is 'remote'.", "type": "string" }
+          },
+          "if": { "properties": { "location": { "const": "remote" } } },
+          "then": { "required": ["location", "optInScope"] }
+        },
+        "model": {
+          "description": "Present whenever a model (local or remote) was used.",
+          "type": "object",
+          "required": ["id"],
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "hash": { "description": "Model weights hash where obtainable (local models).", "type": "string" },
+            "provider": { "type": "string" },
+            "pinned": { "type": "boolean" }
+          }
+        },
+        "parameters": {
+          "description": "Generation parameters (temperature, seed, etc.).",
+          "type": "object"
+        },
+        "promptTemplate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": { "type": "string" },
+            "hash": { "type": "string" }
+          }
+        },
+        "generatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "overlayAnnotation": {
+      "type": "object",
+      "required": ["kind", "anchor", "body", "reasoning"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "kind": {
+          "description": "The interpretation kind. Evidence-class kinds (evidence-indicator, counterpoint, primary-source) additionally require a 'basis' (ADR-0007).",
+          "type": "string",
+          "enum": ["annotation", "summary", "evidence-indicator", "counterpoint", "primary-source", "highlight"]
+        },
+        "anchor": {
+          "type": "object",
+          "required": ["selectors", "status"],
+          "additionalProperties": false,
+          "properties": {
+            "selectors": {
+              "description": "W3C Selectors, most specific first. Engines attempt in order and degrade per the robust-anchoring strategy.",
+              "type": "array",
+              "minItems": 1,
+              "items": { "$ref": "#/$defs/selector" }
+            },
+            "status": {
+              "description": "Anchoring outcome. Degraded or unanchored annotations MUST be visibly marked as such — never guess-anchored silently (ADR-0002).",
+              "type": "string",
+              "enum": ["exact", "degraded", "unanchored", "document"]
+            }
+          }
+        },
+        "body": {
+          "type": "object",
+          "required": ["value"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "type": "string" },
+            "format": { "type": "string", "enum": ["text/plain", "text/markdown"], "default": "text/plain" }
+          }
+        },
+        "basis": {
+          "description": "The checkable facts an evidence-class annotation points to: attributed sources, provenance signals. Never a truth verdict.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type"],
+            "additionalProperties": false,
+            "properties": {
+              "type": { "type": "string", "enum": ["source", "c2pa", "citation", "corroboration", "publisher-identity", "publication-date"] },
+              "uri": { "type": "string", "format": "uri" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "reasoning": {
+          "description": "Reasoning trace: why this annotation exists — which manifest rule, priority, source weight, or signal triggered it. REQUIRED for every annotation.",
+          "type": "string"
+        },
+        "manifestRefs": {
+          "description": "JSON Pointers into the Lens Manifest identifying the fields that triggered this annotation.",
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "enum": ["evidence-indicator", "counterpoint", "primary-source"] } } },
+          "then": { "required": ["kind", "anchor", "body", "reasoning", "basis"] }
+        }
+      ]
+    },
+    "selector": {
+      "description": "Profile of W3C Selectors (https://www.w3.org/TR/annotation-model/#selectors).",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["TextQuoteSelector", "TextPositionSelector", "CssSelector", "RangeSelector", "XPathSelector"] },
+        "exact": { "type": "string" },
+        "prefix": { "type": "string" },
+        "suffix": { "type": "string" },
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 0 },
+        "value": { "type": "string" }
+      }
+    }
+  }
+}
