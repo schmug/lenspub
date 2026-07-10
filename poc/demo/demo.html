@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!--
+  Demo article — LensPub reference engine (PoC).
+
+  A self-contained, fictional article used to exercise the PoC and take
+  screenshots. It contains, deliberately:
+    * paragraphs matching the bundled lens's priorities ("local-first
+      software", "school cybersecurity", "data privacy") -> highlights;
+    * one paragraph with a bare statistic and no links -> the uncited-claim
+      evidence indicator (a heuristic, as its reasoning trace says);
+    * one paragraph with numbers AND citation links -> no indicator;
+    * a blockquote, plus nav/aside/footer content the extractor skips.
+
+  Easiest way to view it: the "Open demo page" button in the extension popup
+  (the page then runs at its chrome-extension:// URL, where the script tag at
+  the bottom activates the overlay). The trusted-origin indicator does not
+  fire here because this page is not served from example-journal.example;
+  that rule is exercised by the Node test suite instead.
+
+  Everything is local: no external fonts, images, or scripts.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School Districts Turn to Local AI Tools as Security Worries Grow — The Example Journal</title>
+<style>
+  body { margin: 0; font: 17px/1.65 Georgia, 'Times New Roman', serif; color: #222; background: #fdfdfb; }
+  .masthead { border-bottom: 3px double #222; padding: 18px 0 10px; text-align: center; }
+  .masthead h1 { margin: 0; font-size: 34px; letter-spacing: 0.02em; }
+  .masthead p { margin: 2px 0 0; font-size: 12px; font-style: italic; color: #666; }
+  nav { border-bottom: 1px solid #ddd; text-align: center; font: 13px system-ui, sans-serif; padding: 6px 0; }
+  nav a { color: #444; text-decoration: none; margin: 0 10px; }
+  .layout { display: flex; max-width: 960px; margin: 0 auto; gap: 32px; padding: 24px 16px; }
+  article { flex: 1; min-width: 0; }
+  article h2 { font-size: 30px; line-height: 1.2; margin: 0 0 6px; }
+  .byline { font: 13px system-ui, sans-serif; color: #666; margin: 0 0 18px; }
+  article p { margin: 0 0 16px; }
+  blockquote { margin: 18px 24px; padding-left: 14px; border-left: 4px solid #999; font-style: italic; color: #444; }
+  aside { width: 220px; font: 13px/1.5 system-ui, sans-serif; color: #555; border-left: 1px solid #ddd; padding-left: 20px; }
+  aside h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+  footer { border-top: 1px solid #ddd; margin-top: 28px; padding: 14px 16px; font: 12px system-ui, sans-serif; color: #777; text-align: center; }
+  a { color: #1a58c2; }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <h1>The Example Journal</h1>
+  <p>Independent reporting for the Exampleton region — a fictional publication for protocol demonstrations</p>
+</header>
+
+<nav aria-label="Sections">
+  <a href="#">Home</a> <a href="#">Local</a> <a href="#">Education</a>
+  <a href="#">Technology</a> <a href="#">Opinion</a>
+</nav>
+
+<div class="layout">
+  <article>
+    <h2>School Districts Turn to Local AI Tools as Security Worries Grow</h2>
+    <p class="byline">By Riley Marsh, Education Desk · The Example Journal</p>
+
+    <!-- Paragraphs are kept on single source lines so that the extracted
+         (rendered) text equals the raw text-node stream and anchors resolve
+         as 'exact'; hard-wrapped sources exercise the 'degraded' fallback. -->
+    <p>School districts across the Exampleton region are quietly rebuilding their classroom technology around a simple idea: student data should not leave the building. After a pair of breaches at cloud vendors last spring, administrators began looking for tools that could run entirely on machines the district already owns.</p>
+
+    <p>The clearest expression of that shift is the district's pilot of local-first software for lesson planning and record keeping, in which documents live on classroom devices and synchronize only within the school's own network. Teachers keep working when the internet fails, and the district's technology office keeps custody of every record.</p>
+
+    <p>The pilot has pushed school cybersecurity from a budget footnote to the center of board meetings. The district hired its first dedicated security coordinator this year, and staff now rehearse incident response the way they once rehearsed fire drills.</p>
+
+    <p>An internal review presented to the board found that 73 percent of teacher laptops were missing critical security updates at the start of the year, and that the average machine was running software last patched more than fourteen months ago.</p>
+
+    <p>Outside assessments paint a more measured picture. A state audit published last year (<a href="https://education.example.gov/audits/regional-technology">summary here</a>) reviewed 40 districts and found that 12 had adopted formal patching schedules, according to the <a href="https://education.example.gov/audits/regional-technology/full-report">full report</a>.</p>
+
+    <blockquote>&ldquo;We are not against the cloud. We are against not knowing where our students&rsquo; work actually is. If a tool cannot answer that question, it does not belong in a classroom.&rdquo; &mdash; Dana Okafor, district technology director</blockquote>
+
+    <p>Parents at last week's meeting framed the change as a question of data privacy rather than technology procurement. Several asked whether vendors could still analyze student work once the new systems were in place, and what the district would do if a future vendor made local operation impossible.</p>
+
+    <p>The district says it will publish its evaluation criteria this fall, and neighboring districts have asked to observe the pilot before drafting their own plans.</p>
+  </article>
+
+  <aside aria-label="Related">
+    <h3>Related coverage</h3>
+    <p>Board approves security coordinator role after lengthy debate.</p>
+    <p>What parents should ask before a district signs a software contract.</p>
+    <p>Regional library system moves its catalog off third-party hosting.</p>
+  </aside>
+</div>
+
+<footer>
+  The Example Journal is a fictional publication that exists only inside the LensPub repository,
+  for demonstrations and screenshots. Article text is illustrative, not factual.
+</footer>
+
+<!--
+  Overlay activation for the demo. When this page is opened at its
+  chrome-extension:// URL (popup -> "Open demo page"), content scripts cannot
+  be injected, so the page loads the same content script directly; it has
+  chrome.runtime here and behaves identically. When the file is opened over
+  file:// without the extension, the script is inert (or 404s) and the page is
+  a plain article. Guards in content.js prevent double-running when the
+  extension also injects it (file:// with "Allow access to file URLs" on).
+-->
+<script src="../content/content.js"></script>
+
+</body>
+</html>

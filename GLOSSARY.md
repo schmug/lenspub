@@ -30,7 +30,7 @@ The structured output of a Lens Engine for a given content target: zero or more 
 A single unit of interpretation anchored to a span or region of content, expressed as a profile of the W3C Web Annotation Data Model (ADR-0002). Overlay Annotations are layered above content; they MUST NOT rewrite, obscure by default, or reorder the underlying content.
 
 ### Anchor
-The association between an Overlay Annotation and a location in content, expressed with W3C Selectors (TextQuoteSelector, TextPositionSelector, CssSelector, RangeSelector) plus the robust-anchoring fallback strategy defined in the Lens Engine specification.
+The association between an Overlay Annotation and a location in content, expressed with W3C Selectors (TextQuoteSelector, TextPositionSelector, CssSelector, XPathSelector, RangeSelector) plus the robust-anchoring fallback strategy defined in the Lens Engine specification.
 
 ### Reasoning Trace
 The human-readable explanation attached to an Interpretation Result or Overlay Annotation stating *why* the engine produced it — which manifest rule, priority, or signal triggered it. Required for explainability.

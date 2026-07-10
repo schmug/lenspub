@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LensPub Reference Engine (PoC)</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>LensPub Reference Engine <span class="muted">(PoC)</span></h1>
+    <span id="location-badge" class="chip chip-local" title="Execution location from the Reproducibility Envelope (ADR-0005)">local</span>
+  </header>
+
+  <section aria-labelledby="lens-heading">
+    <h2 id="lens-heading">Active Lens Manifest</h2>
+    <dl class="kv">
+      <dt>Name</dt><dd id="lens-name">–</dd>
+      <dt>Version</dt><dd id="lens-version">–</dd>
+      <dt>Adaptation policy</dt><dd id="lens-policy">–</dd>
+      <dt>Source</dt><dd id="lens-source">–</dd>
+    </dl>
+  </section>
+
+  <section aria-labelledby="counts-heading">
+    <h2 id="counts-heading">This tab</h2>
+    <p id="no-result" class="muted">No interpretation recorded for this tab yet.</p>
+    <dl class="kv" id="counts" hidden></dl>
+  </section>
+
+  <section aria-labelledby="manifest-heading">
+    <h2 id="manifest-heading">Manifest JSON</h2>
+    <textarea id="manifest-view" readonly rows="10" spellcheck="false"
+      aria-label="Active Lens Manifest JSON (read-only)"></textarea>
+  </section>
+
+  <section aria-labelledby="actions-heading">
+    <h2 id="actions-heading">Actions</h2>
+    <div class="actions">
+      <label class="button" for="import-file">Import manifest…</label>
+      <input type="file" id="import-file" accept=".json,application/json" hidden>
+      <button type="button" id="export-btn">Export manifest</button>
+      <button type="button" id="reset-btn">Reset to bundled lens</button>
+      <button type="button" id="demo-btn">Open demo page</button>
+    </div>
+    <p id="status" role="status" class="status"></p>
+  </section>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+{
+  "lenspub": "0.1",
+  "type": "InterpretationResult",
+  "target": {
+    "source": "https://example-journal.example/2026/06/30/districts-local-ai",
+    "title": "Districts Turn to Local AI as Classroom Tools Multiply",
+    "contentHash": "sha256:603d7345e3fff30ccd2288fbe01ea38c66f9abaf7b7b6c17c45474a38398d8fe"
+  },
+  "lens": {
+    "id": "https://avery.example/lenses/avery-daily",
+    "lensVersion": "1.4.0",
+    "hash": "sha256:0d245b475963843301e4ad4c5117fd0469181d8ae08338bb905b4f3d3bf54019"
+  },
+  "envelope": {
+    "engine": {
+      "id": "lenspub-poc",
+      "version": "0.1.0",
+      "capabilityTier": "rule-based"
+    },
+    "execution": {
+      "location": "local"
+    },
+    "generatedAt": "2026-07-09T15:00:00Z"
+  },
+  "annotations": [
+    {
+      "id": "ann-1",
+      "kind": "highlight",
+      "anchor": {
+        "selectors": [
+          {
+            "type": "TextQuoteSelector",
+            "exact": "running open-weight language models on school-owned hardware, where student prompts and drafts never leave the building",
+            "prefix": "these districts are ",
+            "suffix": ". The approach, usually called on-device or local inference,"
+          },
+          {
+            "type": "CssSelector",
+            "value": "article > p:nth-of-type(4)"
+          }
+        ],
+        "status": "exact"
+      },
+      "body": {
+        "value": "Matches your priority \"local-first and on-device AI\" (weight 0.9).",
+        "format": "text/plain"
+      },
+      "reasoning": "Priority match. The manifest priority 'local-first and on-device AI' (weight 0.9, restricted to Domain Scope 'technical-research') matched this passage on the terms 'open-weight language models', 'school-owned hardware', and 'on-device or local inference'. The page was classified into 'technical-research' and 'education-policy' by the engine's keyword rules (matched classifier terms: 'AI', 'models', 'inference'; 'school districts', 'classroom', 'student data'); classification is an engine responsibility and is reported here so it can be checked. Weight 0.9 exceeds the rule-based tier's highlight threshold of 0.5, so the passage is rendered as a highlight.",
+      "manifestRefs": [
+        "/interpretation/priorities/0",
+        "/domains/0"
+      ]
+    },
+    {
+      "id": "ann-2",
+      "kind": "highlight",
+      "anchor": {
+        "selectors": [
+          {
+            "type": "TextQuoteSelector",
+            "exact": "student data privacy stops being a clause in a vendor contract and becomes a property of the network architecture",
+            "prefix": "Local deployment narrows that exposure: ",
+            "suffix": ", enforced by the plain fact"
+          },
+          {
+            "type": "CssSelector",
+            "value": "article > p:nth-of-type(9)"
+          }
+        ],
+        "status": "exact"
+      },
+      "body": {
+        "value": "Matches your priority \"student data privacy\" (weight 0.7).",
+        "format": "text/plain"
+      },
+      "reasoning": "Priority match. The manifest priority 'student data privacy' (weight 0.7, restricted to Domain Scope 'education-policy') matched this passage on the terms 'student data privacy' and 'retention policies'. The page's classification into 'education-policy' is explained in ann-1. Weight 0.7 exceeds the rule-based tier's highlight threshold of 0.5. This priority's weight was raised from 0.5 to 0.7 in lens version 1.4.0 (accepted proposal lcp-2026-06-17-005); under the previous version this passage would still have been highlighted, but ranked lower.",
+      "manifestRefs": [
+        "/interpretation/priorities/1",
+        "/domains/1"
+      ]
+    },
+    {
+      "id": "ann-3",
+      "kind": "evidence-indicator",
+      "anchor": {
+        "selectors": [
+          {
+            "type": "TextQuoteSelector",
+            "exact": "41 percent of districts said they now require at least one classroom AI tool to run entirely on hardware the district owns or directly controls",
+            "prefix": "In a survey conducted this spring, ",
+            "suffix": "."
+          },
+          {
+            "type": "CssSelector",
+            "value": "article > p:nth-of-type(5)"
+          }
+        ],
+        "status": "exact"
+      },
+      "body": {
+        "value": "Uncited statistic. This sentence reports a specific figure (41 percent) but names no survey and links to no source. Your lens asks for citation signals to be surfaced when they are absent.",
+        "format": "text/plain"
+      },
+      "basis": [
+        {
+          "type": "citation",
+          "description": "Absence signal: no hyperlink, named source, or reference pattern was found within this sentence or its containing paragraph. Detection is a heuristic (the engine scans a number-bearing sentence's paragraph for links and attribution phrases); a citation given elsewhere in the article, or a source the reporter had but did not name, would not be detected."
+        }
+      ],
+      "reasoning": "The manifest lists 'citations' in requireProvenance, so the engine surfaces statistical claims that carry no detectable citation. This is a rule-based heuristic, not a verdict: the indicator says the citation signal is absent here, not that the figure is wrong (ADR-0007 - surface signals, never adjudicate truth).",
+      "manifestRefs": [
+        "/interpretation/sources/requireProvenance/0",
+        "/interpretation/presentation/evidenceIndicators"
+      ]
+    },
+    {
+      "id": "ann-4",
+      "kind": "evidence-indicator",
+      "anchor": {
+        "selectors": [
+          {
+            "type": "TextQuoteSelector",
+            "exact": "locally hosted tutoring models answered curriculum-aligned questions correctly 87 percent of the time",
+            "prefix": "In head-to-head testing conducted by The Example Journal, ",
+            "suffix": ", within four points of the leading cloud services."
+          },
+          {
+            "type": "CssSelector",
+            "value": "article > p:nth-of-type(6)"
+          }
+        ],
+        "status": "exact"
+      },
+      "body": {
+        "value": "Cited claim from a source you trust. The 87 percent figure links to the publication's testing methodology, and example-journal.example is on your trusted list (weight 0.8).",
+        "format": "text/plain"
+      },
+      "basis": [
+        {
+          "type": "citation",
+          "uri": "https://example-journal.example/methodology",
+          "description": "The claim's paragraph links directly to the publication's published testing methodology, satisfying the requireProvenance 'citations' signal."
+        },
+        {
+          "type": "source",
+          "uri": "https://example-journal.example/",
+          "description": "The page origin matches the trusted source entry 'example-journal.example' (weight 0.8). The user's own note on that entry: 'They publish their testing methodology and print corrections.'"
+        }
+      ],
+      "reasoning": "Two manifest rules coincide on this passage. First, the origin example-journal.example matches trusted source entry 0 (weight 0.8), added in lens version 1.4.0. Second, requireProvenance includes 'citations', and this claim carries one: the paragraph links to the methodology page, so the same rule that flags absence in ann-3 here reports presence. The indicator points at the checkable citation; it does not assert that the 87 percent figure is correct.",
+      "manifestRefs": [
+        "/interpretation/sources/trusted/0",
+        "/interpretation/sources/requireProvenance/0"
+      ]
+    },
+    {
+      "id": "ann-5",
+      "kind": "summary",
+      "anchor": {
+        "selectors": [
+          {
+            "type": "CssSelector",
+            "value": "article"
+          }
+        ],
+        "status": "document"
+      },
+      "body": {
+        "value": "A growing minority of U.S. school districts now run classroom AI models on hardware they own instead of in vendor clouds, citing control over student data; the Journal's own testing found local tutoring models within four points of leading cloud services. A vendor calls the tradeoffs solved, while district technology and budget officers describe unresolved maintenance and cost questions.",
+        "format": "text/plain"
+      },
+      "reasoning": "The manifest sets presentation.summaries to 'brief', so the engine emits one document-level summary of at most two sentences. At the rule-based capability tier this summary is extractive: it is assembled from the lead sentences of the paragraphs that scored highest against the lens priorities, not generated by a model. The anchor status 'document' marks it as applying to the whole article rather than a span.",
+      "manifestRefs": [
+        "/interpretation/presentation/summaries"
+      ]
+    },
+    {
+      "id": "ann-6",
+      "kind": "counterpoint",
+      "anchor": {
+        "selectors": [
+          {
+            "type": "TextQuoteSelector",
+            "exact": "Districts that stay on-device give up nothing. The tradeoffs people worry about simply are not there anymore.",
+            "prefix": "said Tomas Reyes, the company's chief executive. \"",
+            "suffix": "\""
+          },
+          {
+            "type": "CssSelector",
+            "value": "article > p:nth-of-type(10)"
+          }
+        ],
+        "status": "exact"
+      },
+      "body": {
+        "value": "An attributed counterpoint is available. 'Local AI Tradeoffs' (Consortium for Education Research, 2026) reports that on-device tutoring models still trail cloud models on multi-step reasoning tasks, and that maintenance, evaluation, and update burdens shift onto district staff - countering the vendor's claim that districts give up nothing.",
+        "format": "text/plain"
+      },
+      "basis": [
+        {
+          "type": "source",
+          "uri": "https://education-research.example/local-ai-tradeoffs",
+          "description": "Attributed alternative source: 'Local AI Tradeoffs', Consortium for Education Research, 2026. The counter-argument presented above belongs to that source, not to the engine."
+        }
+      ],
+      "reasoning": "presentation.counterpoints is set to 'on-request', so no counterpoint was rendered automatically; this annotation was produced only after the user requested counterpoints for this passage. The engine matched the vendor's no-tradeoffs claim against its index of attributed sources and retrieved one that argues otherwise. Per ADR-0007, a counterpoint is retrieval with attribution - the engine presents an existing source's argument and its URI, never an editorial rebuttal of its own.",
+      "manifestRefs": [
+        "/interpretation/presentation/counterpoints"
+      ]
+    }
+  ]
+}

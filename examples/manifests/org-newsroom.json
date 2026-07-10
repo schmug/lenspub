@@ -1,0 +1,125 @@
+{
+  "lenspub": "0.1",
+  "type": "LensManifest",
+  "id": "https://meridianledger.example/lenspub/newsroom-standards.json",
+  "metadata": {
+    "name": "Meridian Ledger Newsroom Standards",
+    "description": "An Organization Lens published by The Meridian Ledger, a fictional metropolitan newsroom, encoding the desk's sourcing standards for readers who want them applied to anything they read. Demonstrates an organization publisher, C2PA provenance requirements for imagery, always-visible reasoning traces, and a locked adaptation policy: this lens changes only through editorial review, applied as direct manual edits and released as new signed versions.",
+    "lensVersion": "3.2.0",
+    "created": "2025-08-18T09:00:00Z",
+    "modified": "2026-05-27T13:20:00Z",
+    "publisher": {
+      "id": "did:web:meridianledger.example",
+      "name": "The Meridian Ledger",
+      "kind": "organization"
+    },
+    "language": "en"
+  },
+  "domains": [
+    {
+      "id": "elections",
+      "label": "Elections",
+      "description": "Campaigns, polling, and election administration."
+    },
+    {
+      "id": "courts",
+      "label": "Courts and legal affairs",
+      "description": "Litigation, rulings, and court records."
+    },
+    {
+      "id": "business",
+      "label": "Business",
+      "description": "Markets, companies, and economic policy."
+    }
+  ],
+  "interpretation": {
+    "priorities": [
+      {
+        "topic": "on-the-record sourcing",
+        "weight": 0.9,
+        "rationale": "Named sources with stated relationships to the story."
+      },
+      {
+        "topic": "original documents",
+        "weight": 0.8,
+        "rationale": "Link the filing, the transcript, the disclosure - not a paraphrase of it."
+      },
+      {
+        "topic": "anonymous single-source claims",
+        "weight": -0.6,
+        "rationale": "One unnamed source is a lead, not a story."
+      },
+      {
+        "topic": "press-release churn",
+        "weight": -0.5,
+        "domains": ["business"],
+        "rationale": "Corporate announcements republished without independent reporting."
+      }
+    ],
+    "sources": {
+      "trusted": [
+        {
+          "origin": "apnews.com",
+          "weight": 0.8,
+          "note": "Wire sourcing baseline."
+        },
+        {
+          "origin": "courtlistener.com",
+          "weight": 0.9,
+          "note": "Primary court records."
+        }
+      ],
+      "distrusted": [
+        {
+          "origin": "rapidwire-news.example",
+          "weight": 0.8,
+          "note": "Aggregator with a record of fabricated attribution."
+        }
+      ],
+      "requireProvenance": [
+        "c2pa",
+        "citations",
+        "author-identity",
+        "publication-date"
+      ]
+    },
+    "presentation": {
+      "annotations": true,
+      "summaries": "brief",
+      "evidenceIndicators": true,
+      "counterpoints": "on-request",
+      "primarySourceExpansion": true,
+      "explanationDisplay": "always"
+    }
+  },
+  "adaptation": {
+    "defaultPolicy": "locked"
+  },
+  "privacy": {
+    "remoteInference": {
+      "allowed": false
+    }
+  },
+  "versionHistory": [
+    {
+      "lensVersion": "3.0.0",
+      "hash": "7c2e5b8f1a4d7c0e3b6f9a2d5c8e1b4f7a0d3c6e9b2f5a8d1c4e7b0f3a6d9c2e",
+      "date": "2025-12-01T09:30:00Z",
+      "proposalId": "editorial-2025-q4-review"
+    },
+    {
+      "lensVersion": "3.1.0",
+      "hash": "9d2f5c8b1e4a7d0f3c6b9e2a5d8f1c4b7e0a3d6f9c2e5b8a1d4f7c0b3e6a9d2f",
+      "date": "2026-03-09T10:15:00Z",
+      "proposalId": "editorial-2026-q1-review"
+    }
+  ],
+  "proof": {
+    "type": "DataIntegrityProof",
+    "cryptosuite": "eddsa-jcs-2022",
+    "created": "2026-05-27T13:25:00Z",
+    "verificationMethod": "did:web:meridianledger.example#standards-desk-2026",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z4oey5q2M3XKaxup3tmzN4m3v6D1kymvEbDVJdgLZW1KY7qFtvhCiSZjRf8pFcNTHzMBMHWfrfKFVCLA2CGWDpdmn"
+  }
+}

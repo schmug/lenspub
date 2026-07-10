@@ -1,0 +1,8 @@
+{
+  "name": "lenspub-poc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Marks the engine modules as ES modules so `node poc/test/run-tests.mjs` runs them natively. Not a build configuration: the extension has no build step and no dependencies, and Chrome ignores this file.",
+  "type": "module",
+  "license": "Apache-2.0"
+}

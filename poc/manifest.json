@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "LensPub Reference Engine (PoC)",
+  "version": "0.1.0",
+  "description": "Reference proof-of-concept Lens Engine: applies a user-owned Lens Manifest to pages as an inspectable overlay. Rule-based capability tier; runs entirely locally.",
+  "permissions": ["storage"],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"],
+      "css": ["content/overlay.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "LensPub Reference Engine (PoC)"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["engine/*.js", "content/overlay.css", "lenses/*.json"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+/*
+ * Overlay styles — LensPub reference engine (PoC).
+ *
+ * This single file is applied twice, to two disjoint sets of selectors:
+ *
+ *  1. Injected into the page (via the extension manifest, or a <style>
+ *     element on the bundled demo page): styles the [data-lenspub-wrap]
+ *     spans that wrap annotated text ranges in the page DOM. Wrapping never
+ *     alters the text itself, and dismissing the overlay unwraps cleanly.
+ *
+ *  2. Injected into the overlay's Shadow DOM: styles the badges, the
+ *     explanation card, and the floating lens indicator (.lp-*). Shadow DOM
+ *     isolation keeps these rules and the page's rules from touching each
+ *     other.
+ */
+
+/* ---- 1. Page-level: wrapped annotation ranges --------------------------- */
+
+[data-lenspub-wrap] {
+  cursor: pointer;
+}
+[data-lenspub-wrap="highlight"] {
+  background-color: rgba(255, 213, 79, 0.55) !important;
+  box-shadow: 0 1px 0 rgba(180, 130, 0, 0.8);
+}
+[data-lenspub-wrap="evidence-indicator"] {
+  background-color: rgba(129, 212, 250, 0.35) !important;
+  border-bottom: 2px dotted rgba(2, 199, 154, 0.9);
+}
+[data-lenspub-wrap="annotation"],
+[data-lenspub-wrap="counterpoint"],
+[data-lenspub-wrap="primary-source"] {
+  background-color: rgba(206, 147, 216, 0.35) !important;
+  border-bottom: 2px dotted rgba(123, 31, 162, 0.8);
+}
+/* Degraded anchors are visibly marked as such (ADR-0002). */
+[data-lenspub-wrap][data-lenspub-degraded] {
+  outline: 1px dashed rgba(230, 81, 0, 0.9);
+  outline-offset: 1px;
+}
+[data-lenspub-wrap]:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 1px;
+}
+/* Overlays toggled off: keep the wrappers, drop all visual effect. */
+[data-lenspub-wrap][data-lenspub-off] {
+  background-color: transparent !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  cursor: inherit;
+}
+
+/* ---- 2. Shadow DOM: badges, card, indicator ------------------------------ */
+
+:host {
+  all: initial;
+}
+.lp-hidden {
+  display: none !important;
+}
+
+.lp-badge-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  overflow: visible;
+  z-index: 2147483645;
+}
+.lp-badge {
+  position: absolute;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 50%;
+  font: 700 11px/18px system-ui, sans-serif;
+  text-align: center;
+  color: #1f1f1f;
+  background: #ffd54f;
+  cursor: pointer;
+  z-index: 2147483645;
+}
+.lp-badge.lp-kind-evidence-indicator {
+  background: #81d4fa;
+}
+.lp-badge.lp-kind-summary {
+  background: #c5e1a5;
+}
+.lp-badge.lp-kind-annotation,
+.lp-badge.lp-kind-counterpoint,
+.lp-badge.lp-kind-primary-source {
+  background: #ce93d8;
+}
+.lp-badge.lp-degraded,
+.lp-badge.lp-unanchored {
+  border: 2px dashed #e65100;
+}
+.lp-badge:hover,
+.lp-badge:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: 1px;
+}
+.lp-dock-badge {
+  position: static;
+  display: inline-block;
+  margin: 2px 4px 0 0;
+}
+
+.lp-indicator {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  max-width: 340px;
+  padding: 8px 10px;
+  border: 1px solid #c9c9c9;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f1f1f;
+  font: 12px/1.5 system-ui, sans-serif;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 2147483646;
+}
+.lp-indicator-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.lp-lens-name {
+  font-weight: 700;
+}
+.lp-chip {
+  display: inline-block;
+  padding: 0 6px;
+  border: 1px solid #bdbdbd;
+  border-radius: 9px;
+  background: #f1f3f4;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.lp-chip-local {
+  background: #e6f4ea;
+  border-color: #34a853;
+  color: #14602c;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.lp-chip-warn {
+  background: #fde7e9;
+  border-color: #d93025;
+  color: #a50e0e;
+}
+.lp-chip-anchor {
+  font-family: ui-monospace, monospace;
+}
+.lp-indicator-btn {
+  padding: 1px 8px;
+  border: 1px solid #bdbdbd;
+  border-radius: 4px;
+  background: #f8f9fa;
+  font: 12px system-ui, sans-serif;
+  cursor: pointer;
+}
+.lp-indicator-btn:hover,
+.lp-indicator-btn:focus-visible {
+  outline: 2px solid #1a73e8;
+}
+.lp-dock {
+  margin-top: 4px;
+}
+.lp-dock:empty {
+  display: none;
+}
+
+.lp-card {
+  position: fixed;
+  right: 16px;
+  bottom: 96px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: 60vh;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid #c9c9c9;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f1f1f;
+  font: 13px/1.55 system-ui, sans-serif;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+  z-index: 2147483647;
+}
+.lp-card:focus {
+  outline: 2px solid #1a73e8;
+}
+.lp-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.lp-card-close {
+  margin-left: auto;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #bdbdbd;
+  border-radius: 4px;
+  background: #f8f9fa;
+  font: 700 14px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+.lp-card-close:hover,
+.lp-card-close:focus-visible {
+  outline: 2px solid #1a73e8;
+}
+.lp-card-body {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.lp-card-section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eeeeee;
+}
+.lp-card-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5f6368;
+  margin-bottom: 2px;
+}
+.lp-basis-list {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+.lp-basis-type {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: #5f6368;
+}
+.lp-basis-list a {
+  color: #1a58c2;
+  word-break: break-all;
+}
+.lp-card-envelope {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: #3c4043;
+}

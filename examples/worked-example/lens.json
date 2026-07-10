@@ -1,0 +1,103 @@
+{
+  "lenspub": "0.1",
+  "type": "LensManifest",
+  "id": "https://avery.example/lenses/avery-daily",
+  "metadata": {
+    "name": "Avery's Daily Lens",
+    "description": "Avery's everyday reading lens. Emphasizes local-first AI engineering and student data privacy, surfaces missing citations, and keeps politics locked against adaptation.",
+    "lensVersion": "1.4.0",
+    "created": "2025-11-02T09:14:00Z",
+    "modified": "2026-06-19T18:22:00Z",
+    "language": "en"
+  },
+  "domains": [
+    {
+      "id": "technical-research",
+      "label": "Technical research",
+      "description": "Engineering and research content: systems, machine learning, standards, evaluations."
+    },
+    {
+      "id": "education-policy",
+      "label": "Education policy",
+      "description": "Schooling, education technology procurement, student data governance."
+    },
+    {
+      "id": "politics",
+      "label": "Politics",
+      "description": "Electoral politics and partisan commentary. Kept deliberately static."
+    }
+  ],
+  "interpretation": {
+    "priorities": [
+      {
+        "topic": "local-first and on-device AI",
+        "weight": 0.9,
+        "domains": [
+          "technical-research"
+        ],
+        "rationale": "I build local-first software; I want passages about on-device inference and self-hosted models to stand out."
+      },
+      {
+        "topic": "student data privacy",
+        "weight": 0.7,
+        "domains": [
+          "education-policy"
+        ],
+        "rationale": "Two kids in public school. I want to see what actually happens to their data, not vendor reassurances."
+      }
+    ],
+    "sources": {
+      "trusted": [
+        {
+          "origin": "example-journal.example",
+          "weight": 0.8,
+          "note": "They publish their testing methodology and print corrections. Checked their benchmark writeups twice; both held up."
+        }
+      ],
+      "distrusted": [
+        {
+          "origin": "contentmill.example",
+          "weight": 0.9,
+          "note": "Recycled press releases with invented statistics. Twice caught fabricating survey numbers."
+        }
+      ],
+      "requireProvenance": [
+        "citations"
+      ]
+    },
+    "presentation": {
+      "annotations": true,
+      "summaries": "brief",
+      "evidenceIndicators": true,
+      "counterpoints": "on-request",
+      "primarySourceExpansion": true,
+      "explanationDisplay": "on-request"
+    }
+  },
+  "adaptation": {
+    "defaultPolicy": "balanced",
+    "domainPolicies": [
+      {
+        "domain": "politics",
+        "policy": "locked"
+      },
+      {
+        "domain": "technical-research",
+        "policy": "adaptive"
+      }
+    ]
+  },
+  "privacy": {
+    "remoteInference": {
+      "allowed": false
+    }
+  },
+  "versionHistory": [
+    {
+      "lensVersion": "1.3.0",
+      "hash": "sha256:89232b5486311810243c7c067c76cd83bac48e3117359acebd5195dbc93a7b70",
+      "date": "2026-04-07T16:40:00Z",
+      "proposalId": "lcp-2026-04-05-002"
+    }
+  ]
+}

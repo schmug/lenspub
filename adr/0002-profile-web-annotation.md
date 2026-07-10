@@ -8,7 +8,7 @@ LensPub's reader experience is an overlay: annotations, summaries, evidence indi
 
 ## Decision
 
-LensPub Overlay Annotations are defined as a **profile of the W3C Web Annotation Data Model**, using the Selectors and States vocabulary (TextQuoteSelector, TextPositionSelector, CssSelector, RangeSelector) for anchoring. The profile adds LensPub-specific properties (reasoning trace, reproducibility envelope reference, interpretation kind) via the model's standard extension mechanism.
+LensPub Overlay Annotations are defined as a **profile of the W3C Web Annotation Data Model**, using the Selectors and States vocabulary (TextQuoteSelector, TextPositionSelector, CssSelector, XPathSelector, RangeSelector) for anchoring. The profile adds LensPub-specific properties (reasoning trace, reproducibility envelope reference, interpretation kind) via the model's standard extension mechanism.
 
 The Lens Engine specification defines a **robust-anchoring fallback strategy**: engines MUST attempt selectors in order of specificity, MUST degrade gracefully (attach at the nearest stable ancestor, or present unanchored in a margin panel) when exact anchoring fails, and MUST NOT guess-anchor silently — an annotation displayed at a degraded anchor is marked as such.
 

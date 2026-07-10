@@ -166,7 +166,7 @@
       ]
     },
     "selector": {
-      "description": "Profile of W3C Selectors (https://www.w3.org/TR/annotation-model/#selectors).",
+      "description": "Profile of W3C Selectors (https://www.w3.org/TR/annotation-model/#selectors). Additional selector properties from the Web Annotation model (e.g. refinedBy) are deliberately permitted.",
       "type": "object",
       "required": ["type"],
       "properties": {

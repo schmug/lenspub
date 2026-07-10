@@ -1,0 +1,111 @@
+{
+  "lenspub": "0.1",
+  "type": "LensManifest",
+  "id": "https://elmstreet-circle.example/lens.json",
+  "metadata": {
+    "name": "Elm Street Reading Circle",
+    "description": "A collaborative Partner Lens maintained by a six-person reading group. Demonstrates a partner publisher identified by did:key, group-negotiated priorities across three Domain Scopes, an unpinned advisory subscription to a critic's Expert Lens restricted to one domain (updates arrive as Lens Change Proposals), and balanced adaptation so member feedback surfaces regularly for group review.",
+    "lensVersion": "0.9.1",
+    "created": "2026-01-12T19:00:00Z",
+    "modified": "2026-06-15T20:12:00Z",
+    "publisher": {
+      "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+      "name": "Elm Street Reading Circle",
+      "kind": "partner"
+    },
+    "language": "en"
+  },
+  "domains": [
+    {
+      "id": "literary-fiction",
+      "label": "Literary fiction",
+      "description": "Novels and short fiction the circle reads together."
+    },
+    {
+      "id": "history",
+      "label": "History",
+      "description": "Historical nonfiction and archival material."
+    },
+    {
+      "id": "science-writing",
+      "label": "Science writing",
+      "description": "Popular science books and long-form journalism."
+    }
+  ],
+  "interpretation": {
+    "priorities": [
+      {
+        "topic": "translated fiction",
+        "weight": 0.6,
+        "domains": ["literary-fiction"],
+        "rationale": "The circle's standing theme for 2026."
+      },
+      {
+        "topic": "primary archival material",
+        "weight": 0.7,
+        "domains": ["history"],
+        "rationale": "Letters, records, and period documents over retellings."
+      },
+      {
+        "topic": "spoilers",
+        "weight": -0.7,
+        "domains": ["literary-fiction"],
+        "rationale": "Members read at different paces."
+      },
+      {
+        "topic": "hype-cycle framing",
+        "weight": -0.5,
+        "domains": ["science-writing"],
+        "rationale": "Skip the revolution-of-the-week register."
+      }
+    ],
+    "sources": {
+      "trusted": [
+        {
+          "origin": "https://quietpages.example",
+          "weight": 0.7,
+          "note": "Independent review site two members write for; noted for disclosure."
+        },
+        {
+          "origin": "publicdomainreview.org",
+          "weight": 0.6
+        }
+      ],
+      "requireProvenance": ["citations"]
+    },
+    "presentation": {
+      "annotations": true,
+      "summaries": "brief",
+      "evidenceIndicators": true,
+      "counterpoints": "on-request",
+      "primarySourceExpansion": true,
+      "explanationDisplay": "on-request"
+    }
+  },
+  "adaptation": {
+    "defaultPolicy": "balanced",
+    "domainPolicies": [
+      { "domain": "science-writing", "policy": "conservative" }
+    ]
+  },
+  "privacy": {
+    "remoteInference": {
+      "allowed": false
+    }
+  },
+  "subscriptions": [
+    {
+      "lens": "did:web:papercuts-review.example",
+      "domains": ["literary-fiction"],
+      "trust": "advisory"
+    }
+  ],
+  "versionHistory": [
+    {
+      "lensVersion": "0.9.0",
+      "hash": "3b6e9c2f5a8d1b4e7c0f3a6d9b2e5c8f1a4d7b0e3c6f9a2d5b8e1c4f7a0d3b6e",
+      "date": "2026-04-05T18:30:00Z",
+      "proposalId": "lcp-2026-04-05-001"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "lenspub": "0.1",
+  "type": "LensManifest",
+  "metadata": {
+    "name": "Minimal Lens",
+    "description": "The smallest valid Lens Manifest, demonstrating the required floor: the protocol version, the type marker, a name and semantic version, an (empty) interpretation policy, and a default Adaptation Policy. Everything else - including this description - is optional. An empty interpretation object means the engine applies its documented defaults; 'balanced' means the lens may evolve, but only through reviewed Lens Change Proposals.",
+    "lensVersion": "0.1.0"
+  },
+  "interpretation": {},
+  "adaptation": {
+    "defaultPolicy": "balanced"
+  }
+}
