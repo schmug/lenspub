@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Validates every JSON example in the repository against its schema.
-// Usage: node scripts/validate-examples.mjs   (requires: npm install ajv ajv-formats)
+// Usage: npm run validate   (or: node scripts/validate-examples.mjs, after `npm install`)
 // Licensed Apache-2.0 (see /LICENSE.md).
 
 import { readFileSync, readdirSync } from 'node:fs';

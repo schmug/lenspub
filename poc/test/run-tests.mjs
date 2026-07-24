@@ -383,9 +383,16 @@ test('envelope has required fields, rule-based tier, local execution', () => {
 console.log('schema validation (Ajv)');
 
 const require = createRequire(import.meta.url);
-const AjvMod = require('/home/claude/node_modules/ajv/dist/2020');
+let AjvMod, addFormats;
+try {
+  AjvMod = require('ajv/dist/2020');
+  addFormats = require('ajv-formats');
+} catch (err) {
+  if (err.code !== 'MODULE_NOT_FOUND') throw err;
+  console.error('\nAjv is not installed. Run `npm install` in the repository root, then re-run this suite.');
+  process.exit(1);
+}
 const Ajv = AjvMod.default || AjvMod;
-const addFormats = require('/home/claude/node_modules/ajv-formats');
 const ajv = new Ajv({ strict: false });
 addFormats(ajv);
 

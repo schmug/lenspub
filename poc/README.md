@@ -30,10 +30,10 @@ The overlay also runs on ordinary `http(s)` pages (content script at `document_i
 ## Run the tests
 
 ```
-node poc/test/run-tests.mjs
+npm install && npm test
 ```
 
-Plain Node asserts over the pure engine modules, then Ajv validation of the produced Interpretation Result and the bundled lens against the normative schemas in [`../schemas/`](../schemas/). Requires Node 18+ and the repository's Ajv installation (see the repo authoring notes); the extension itself needs neither.
+from the repository root (equivalently, `node poc/test/run-tests.mjs` once dependencies are installed). Plain Node asserts over the pure engine modules, then Ajv validation of the produced Interpretation Result and the bundled lens against the normative schemas in [`../schemas/`](../schemas/). Requires Node 18+ and the Ajv devDependencies declared in the root [`package.json`](../package.json); the extension itself needs neither.
 
 ## What each component demonstrates
 

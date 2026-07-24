@@ -1,0 +1,15 @@
+{
+  "name": "lenspub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Declares the tooling dependencies for the repository's two Node entry points — the schema example validator and the PoC engine test suite. Not a build configuration: the specification is prose and schemas, and the browser extension in poc/ has no build step and no runtime dependencies.",
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "node poc/test/run-tests.mjs",
+    "validate": "node scripts/validate-examples.mjs"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1"
+  }
+}
