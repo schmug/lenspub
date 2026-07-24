@@ -44,14 +44,13 @@ New here? Read these in order:
 
 The proof of concept is a dependency-free Chrome/Chromium extension. Load `poc/` unpacked (chrome://extensions → Developer mode), open `poc/demo/demo.html`, and click any highlight to see the reasoning trace and reproducibility envelope behind it. Instructions: [`poc/README.md`](poc/README.md).
 
-To validate the JSON examples against the schemas:
+The repository's two Node entry points — the schema validator and the engine test suite — need Ajv. Install once (Node 18+):
 
 ```
-npm install ajv ajv-formats
-node scripts/validate-examples.mjs
+npm install
 ```
 
-To run the engine unit tests: `node poc/test/run-tests.mjs`.
+Then validate every JSON example against the schemas with `npm run validate`, and run the engine unit tests with `npm test`. Both scripts are plain `node` invocations (`scripts/validate-examples.mjs` and `poc/test/run-tests.mjs`) and can be called directly. The extension itself has no dependencies and no build step.
 
 ## Standards posture
 
