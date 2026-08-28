@@ -34,7 +34,7 @@ New here? Read these in order:
 | [`spec/`](spec/) | [LensPub Protocol](spec/lenspub-protocol.md) · [Lens Manifest](spec/lens-manifest.md) · [Lens Engine](spec/lens-engine.md) · [Adaptation Model](spec/adaptation-model.md) · [Lens Diff](spec/lens-diff.md) |
 | [`architecture/`](architecture/) | [Reference Architecture](architecture/architecture.md) · [Reference Implementation](architecture/reference-implementation.md) |
 | [`security/`](security/) | [Security Model](security/security-model.md) · [Privacy Model](security/privacy-model.md) · [Threat Model](security/threat-model.md) |
-| [`adr/`](adr/README.md) | The ten Architecture Decision Records freezing the constitutional decisions |
+| [`adr/`](adr/README.md) | The Architecture Decision Records freezing the constitutional decisions — 0001–0010 accepted, later numbers may be under review |
 | [`schemas/`](schemas/) | JSON Schemas for the three exchange objects |
 | [`examples/`](examples/) | Five example manifests, an example diff, and the [end-to-end worked example](examples/worked-example/README.md) |
 | [`poc/`](poc/README.md) | Browser proof of concept — a working MV3 extension implementing the rule-based engine tier |
@@ -44,13 +44,13 @@ New here? Read these in order:
 
 The proof of concept is a dependency-free Chrome/Chromium extension. Load `poc/` unpacked (chrome://extensions → Developer mode), open `poc/demo/demo.html`, and click any highlight to see the reasoning trace and reproducibility envelope behind it. Instructions: [`poc/README.md`](poc/README.md).
 
-The repository's two Node entry points — the schema validator and the engine test suite — need Ajv. Install once (Node 18+):
+The repository's three Node entry points — the schema validator, the Markdown cross-reference checker, and the engine test suite — need Ajv. Install once (Node 18+):
 
 ```
 npm install
 ```
 
-Then validate every JSON example against the schemas with `npm run validate`, and run the engine unit tests with `npm test`. Both scripts are plain `node` invocations (`scripts/validate-examples.mjs` and `poc/test/run-tests.mjs`) and can be called directly. The extension itself has no dependencies and no build step.
+Then validate every JSON example against the schemas with `npm run validate`, check that every cross-reference in the documentation resolves with `npm run check-links`, and run the engine unit tests with `npm test`. All three are plain `node` invocations (`scripts/validate-examples.mjs`, `scripts/check-links.mjs`, and `poc/test/run-tests.mjs`) and can be called directly; all three run in CI on every pull request. The extension itself has no dependencies and no build step.
 
 ## Standards posture
 
