@@ -14,6 +14,9 @@ This directory is the frozen record of the project's constitutional decisions. E
 | [0008](0008-interpretation-is-overlay-stage.md) | Interpretation is a user-agent-side, post-render overlay stage | Accepted |
 | [0009](0009-licensing-and-governance.md) | CC-BY 4.0 spec, Apache-2.0 code, personal open project | Accepted |
 | [0010](0010-adaptation-policies-parameterized.md) | Five adaptation policies as points on explicit parameters | Accepted |
+| [0011](0011-overlay-invariants-bind-to-authored-content.md) | Overlay invariants bind to authored rendered content; a Record Set is a distinct substrate | **Proposed** |
+
+ADRs 0001–0010 are the accepted constitutional record, decided on 2026-07-09. A **Proposed** ADR is an open proposal under [GOVERNANCE.md §3](../GOVERNANCE.md), not a decision: it binds nothing, no dependent document cites it, and it carries a minimum 14-day public review period before the maintainer rules on it.
 
 Additional posture decisions recorded in the constitution's Standards Posture section: hosting is abstract in v1 with Solid as an optional profile; subscription transport is agnostic in v1 with AT Protocol as the reference binding.
 
