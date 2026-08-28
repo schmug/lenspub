@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!--
+  LensPub — prompt-to-lens spike.  THROWAWAY. Not part of the specification,
+  not part of the PoC, not a conformance claim. Built to answer one question:
+
+    Can a natural-language prompt produce a lens WITHOUT the lens becoming a
+    prompt (ADR-0001), and can the resulting view be shown to leave the
+    underlying records untouched (ADR-0008)?
+
+  Framing (from the brief): the records are the backend truth; the rendered
+  view is the frontend lens applied to that truth. The prompt is an authoring
+  input only — it is compiled into a declarative Lens Manifest and then
+  discarded. The prompt never appears in the manifest.
+
+  Runs from the filesystem. No network, no build step, no dependencies, no
+  webfonts — consistent with ADR-0005's local-only default and the PoC's
+  no-network posture. Double-click to open.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LensPub — prompt-to-lens spike</title>
+<style>
+  :root {
+    --bench:       #171D24;
+    --bench-2:     #1F272F;
+    --bench-3:     #273139;
+    --bench-line:  #2E3941;
+    --bench-ink:   #C9D3D9;
+    --bench-ink-2: #8595A0;
+
+    --substrate:   #EDF0EE;
+    --card:        #FFFFFF;
+    --ink:         #10161B;
+    --ink-2:       #47535C;
+    --trace:       #7C8A93;
+    --rule:        #D5DCD9;
+
+    --coating:     #0F8F97;
+    --coating-lo:  #E2F1F1;
+    --filament:    #B87524;
+    --filament-lo: #F7EEE0;
+    --flag:        #B0483A;
+    --flag-lo:     #F7E7E4;
+
+    --ui:   ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, sans-serif;
+    --text: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", "Hoefler Text", Georgia, serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, "IBM Plex Mono", Menlo, Consolas, monospace;
+
+    --strip: 34px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bench);
+    color: var(--ink);
+    font: 15px/1.55 var(--ui);
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input, textarea { font: inherit; color: inherit; }
+  a { color: var(--coating); }
+
+  /* ── bench rail ─────────────────────────────────────────────── */
+  .rail {
+    display: flex; align-items: baseline; gap: 14px;
+    padding: 10px 18px; border-bottom: 1px solid var(--bench-line);
+    background: var(--bench); color: var(--bench-ink);
+    font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+    position: sticky; top: 0; z-index: 30;
+  }
+  .rail b { font-weight: 650; letter-spacing: .14em; }
+  .rail .spike {
+    text-transform: none; letter-spacing: 0;
+    font: 11px/1 var(--mono); color: var(--bench-ink-2);
+    border: 1px solid var(--bench-line); border-radius: 2px; padding: 4px 7px;
+  }
+  .rail .grow { flex: 1; }
+  .rail .envelope { font: 11px/1 var(--mono); color: var(--bench-ink-2); text-transform: none; letter-spacing: 0; }
+  .rail .envelope b { color: var(--coating); letter-spacing: 0; }
+
+  /* ── two-material split ─────────────────────────────────────── */
+  .bench {
+    display: grid; grid-template-columns: 400px minmax(0, 1fr);
+    min-height: calc(100vh - 41px);
+  }
+
+  /* ── console (instrument body) ──────────────────────────────── */
+  .console {
+    background: var(--bench); color: var(--bench-ink);
+    border-right: 1px solid var(--bench-line);
+    padding: 22px 20px 40px; display: flex; flex-direction: column; gap: 22px;
+  }
+  .console h1 {
+    font-size: 21px; line-height: 1.25; margin: 0 0 6px; font-weight: 600; letter-spacing: -.01em;
+  }
+  .console .sub { margin: 0; color: var(--bench-ink-2); font-size: 13px; line-height: 1.5; }
+
+  .field label {
+    display: block; font: 11px/1 var(--mono); letter-spacing: .1em;
+    text-transform: uppercase; color: var(--bench-ink-2); margin-bottom: 8px;
+  }
+  textarea#prompt {
+    width: 100%; min-height: 86px; resize: vertical;
+    background: var(--bench-2); color: var(--bench-ink);
+    border: 1px solid var(--bench-line); border-radius: 3px;
+    padding: 11px 12px; font-size: 14px; line-height: 1.5;
+  }
+  textarea#prompt::placeholder { color: #5E6C77; }
+  textarea#prompt:focus-visible, .chip:focus-visible, button:focus-visible, .seg button:focus-visible, .why:focus-visible {
+    outline: 2px solid var(--coating); outline-offset: 2px;
+  }
+
+  .actions { display: flex; gap: 9px; margin-top: 10px; align-items: center; }
+  .btn {
+    background: var(--coating); color: #04191A; border: 0; border-radius: 3px;
+    padding: 9px 15px; font-weight: 600; font-size: 13.5px; cursor: pointer;
+  }
+  .btn:hover { background: #12A5AE; }
+  .btn.ghost { background: transparent; color: var(--bench-ink-2); border: 1px solid var(--bench-line); font-weight: 500; }
+  .btn.ghost:hover { color: var(--bench-ink); border-color: #3C4A54; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip {
+    background: transparent; border: 1px solid var(--bench-line); color: var(--bench-ink-2);
+    border-radius: 100px; padding: 5px 11px; font-size: 12.5px; cursor: pointer; text-align: left;
+  }
+  .chip:hover { color: var(--bench-ink); border-color: var(--coating); }
+
+  .panel { border-top: 1px solid var(--bench-line); padding-top: 16px; }
+  .panel > h2 {
+    font: 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+    color: var(--bench-ink-2); margin: 0 0 4px; display: flex; gap: 8px; align-items: baseline;
+  }
+  .panel > h2 .n { color: var(--coating); }
+  .panel .hint { margin: 0 0 11px; font-size: 12px; line-height: 1.5; color: #66747E; }
+
+  .echo { font-size: 13px; line-height: 1.7; color: #66747E; word-break: break-word; }
+  .echo mark {
+    background: rgba(15,143,151,.16); color: var(--bench-ink);
+    border-bottom: 1px solid var(--coating); border-radius: 2px; padding: 1px 2px;
+  }
+  .uncompiled { margin-top: 9px; font-size: 12px; color: var(--bench-ink-2); }
+  .uncompiled code {
+    font: 12px/1 var(--mono); background: var(--bench-2); border: 1px solid var(--bench-line);
+    border-radius: 2px; padding: 3px 5px; margin-right: 4px; display: inline-block; color: #92A1AB;
+  }
+
+  pre.manifest {
+    margin: 0; font: 11.5px/1.62 var(--mono); color: #9FB0B9;
+    background: var(--bench-2); border: 1px solid var(--bench-line); border-radius: 3px;
+    padding: 12px 0; max-height: 340px; overflow: auto;
+  }
+  pre.manifest .ln { display: block; padding: 0 12px; border-left: 2px solid transparent; white-space: pre-wrap; word-break: break-word; }
+  pre.manifest .ln.changed { border-left-color: var(--coating); background: rgba(15,143,151,.08); color: #CFDDE3; }
+  pre.manifest .k { color: #7FBFC4; }
+  pre.manifest .s { color: #C8B48A; }
+  pre.manifest .n { color: #D69A7A; }
+
+  .note-ok, .note-warn {
+    font-size: 12px; line-height: 1.55; border-radius: 3px; padding: 9px 11px; margin-top: 12px;
+  }
+  .note-ok   { background: rgba(15,143,151,.10); border: 1px solid rgba(15,143,151,.34); color: #A9C6C9; }
+  .note-warn { background: rgba(176,72,58,.10); border: 1px solid rgba(176,72,58,.34); color: #D3A79F; }
+
+  /* ── substrate (specimen) ───────────────────────────────────── */
+  .substrate { background: var(--substrate); display: flex; flex-direction: column; min-width: 0; }
+
+  .readout {
+    display: flex; align-items: center; gap: 0; flex-wrap: wrap;
+    background: var(--card); border-bottom: 1px solid var(--rule);
+    padding: 0 22px; position: sticky; top: 41px; z-index: 20;
+  }
+  .readout .cell {
+    padding: 11px 18px 11px 0; margin-right: 18px; border-right: 1px solid var(--rule);
+    font: 11.5px/1.3 var(--mono); color: var(--ink-2); white-space: nowrap;
+  }
+  .readout .cell:last-of-type { border-right: 0; }
+  .readout .cell b { color: var(--ink); font-weight: 600; }
+  .readout .cell.bad b, .readout .cell.bad { color: var(--flag); }
+  .readout .grow { flex: 1; }
+
+  .seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 3px; overflow: hidden; }
+  .seg button {
+    background: var(--card); border: 0; padding: 6px 13px; font-size: 12.5px; cursor: pointer; color: var(--ink-2);
+  }
+  .seg button + button { border-left: 1px solid var(--rule); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #F4F7F6; }
+
+  .stage { display: grid; grid-template-columns: var(--strip) minmax(0, 1fr); flex: 1; }
+
+  /* signature: the substrate strip — one tick per canonical record, always
+     in canonical order, regardless of what the lens does to the view. */
+  .strip {
+    border-right: 1px solid var(--rule); padding: 26px 0 40px;
+    display: flex; flex-direction: column; gap: 4px; align-items: center;
+    position: sticky; top: 84px; align-self: start; max-height: calc(100vh - 84px);
+  }
+  .strip .cap {
+    font: 9.5px/1 var(--mono); color: var(--trace); letter-spacing: .08em;
+    writing-mode: vertical-rl; margin-bottom: 8px; text-transform: uppercase;
+  }
+  .tick {
+    width: 13px; height: 7px; border-radius: 1px; background: #D2D9D6; position: relative;
+    transition: background .28s ease, transform .28s ease;
+  }
+  .tick.lit { background: var(--coating); }
+  .tick.dim { background: #C3CBC8; }
+  .tick.missing { background: var(--flag); transform: scaleX(1.5); }
+  .strip .count { font: 10px/1 var(--mono); color: var(--trace); margin-top: 9px; }
+
+  .view { padding: 26px 26px 72px; min-width: 0; }
+
+  .viewhead { margin-bottom: 20px; }
+  .viewhead h2 {
+    font: 600 25px/1.2 var(--ui); letter-spacing: -.015em; margin: 0 0 6px; color: var(--ink);
+  }
+  .viewhead p { margin: 0; color: var(--ink-2); font-size: 13.5px; max-width: 64ch; }
+  .kindtag {
+    display: inline-block; font: 10.5px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase;
+    color: var(--coating); border: 1px solid var(--coating); border-radius: 2px;
+    padding: 4px 7px; margin-bottom: 10px;
+  }
+  .reorder {
+    display: inline-block; margin-left: 7px; font: 10.5px/1 var(--mono); letter-spacing: .08em;
+    text-transform: uppercase; color: var(--filament); border: 1px solid var(--filament);
+    border-radius: 2px; padding: 4px 7px;
+  }
+
+  .group { margin-bottom: 26px; }
+  .group > h3 {
+    font: 11px/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--trace);
+    margin: 0 0 3px; display: flex; align-items: baseline; gap: 8px;
+  }
+  .group > .gnote { margin: 0 0 12px; font-size: 12.5px; color: var(--trace); }
+
+  .rec {
+    background: var(--card); border: 1px solid var(--rule); border-radius: 4px;
+    padding: 14px 16px; margin-bottom: 8px; position: relative;
+  }
+  .rec.emph { border-left: 3px solid var(--coating); }
+  .rec.deemph { background: #E7EBE9; border-style: dashed; }
+  .rec .meta {
+    font: 11px/1 var(--mono); color: var(--trace); margin-bottom: 6px;
+    display: flex; gap: 9px; flex-wrap: wrap; align-items: center;
+  }
+  .rec .meta .id { color: #A6B1AD; }
+  .rec h4 { margin: 0 0 5px; font: 600 16.5px/1.32 var(--ui); letter-spacing: -.01em; color: var(--ink); }
+  .rec .line { margin: 0; font: 15px/1.55 var(--text); color: var(--ink-2); }
+  .rec .line.brief { font-size: 14px; }
+
+  .badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+  .badge {
+    font: 11px/1 var(--mono); border-radius: 2px; padding: 4px 7px; border: 1px solid;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .badge.coat  { color: var(--coating);  border-color: #A9D6D8; background: var(--coating-lo); }
+  .badge.fil   { color: var(--filament); border-color: #E3CFA9; background: var(--filament-lo); }
+  .badge.flag  { color: var(--flag);     border-color: #E5BDB6; background: var(--flag-lo); }
+  .badge.mute  { color: var(--trace);    border-color: var(--rule); background: transparent; }
+
+  .why {
+    background: transparent; border: 1px solid var(--rule); color: var(--trace);
+    border-radius: 100px; width: 20px; height: 20px; line-height: 1; cursor: pointer;
+    font-size: 11px; padding: 0; flex: none;
+  }
+  .why:hover { color: var(--coating); border-color: var(--coating); }
+  .rec .why { position: absolute; top: 12px; right: 12px; }
+
+  .trace {
+    margin-top: 10px; border-top: 1px dashed var(--rule); padding-top: 10px;
+    font-size: 13px; color: var(--ink-2); line-height: 1.55;
+  }
+  .trace .refs { margin-top: 7px; display: flex; flex-direction: column; gap: 3px; }
+  .trace .refs span { font: 11.5px/1.4 var(--mono); color: var(--trace); }
+  .trace .refs b { color: var(--ink-2); font-weight: 500; }
+  .trace[hidden] { display: none; }
+
+  /* evidence table */
+  .etable { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--rule); }
+  .etable th {
+    text-align: left; font: 11px/1.3 var(--mono); letter-spacing: .06em; text-transform: uppercase;
+    color: var(--trace); padding: 10px 12px; border-bottom: 1px solid var(--rule); vertical-align: bottom;
+  }
+  .etable td { padding: 11px 12px; border-bottom: 1px solid #E7EBE9; vertical-align: top; font-size: 13px; }
+  .etable tr:last-child td { border-bottom: 0; }
+  .etable td.rec-cell { min-width: 220px; }
+  .etable td.rec-cell b { display: block; font: 600 14px/1.35 var(--ui); color: var(--ink); margin-bottom: 3px; }
+  .etable td.rec-cell span { font: 11px/1 var(--mono); color: var(--trace); }
+  .cellstate { display: block; font: 11.5px/1.35 var(--mono); }
+  .cellstate.present { color: var(--coating); }
+  .cellstate.absent  { color: var(--filament); }
+  .cellstate .basis { display: block; color: var(--trace); font-size: 11px; margin-top: 3px; word-break: break-all; }
+  .etable .why { margin-top: 2px; }
+
+  /* timeline */
+  .tl { border-left: 2px solid var(--rule); margin-left: 6px; padding-left: 20px; }
+  .tl .rec { margin-left: 0; }
+  .tl .rec::before {
+    content: ""; position: absolute; left: -27px; top: 20px;
+    width: 9px; height: 9px; border-radius: 50%; background: var(--rule); border: 2px solid var(--substrate);
+  }
+  .tl .rec.emph::before { background: var(--coating); }
+
+  .empty { color: var(--trace); font-size: 14px; max-width: 60ch; }
+
+  .foot {
+    border-top: 1px solid var(--rule); margin-top: 30px; padding-top: 16px;
+    font-size: 12.5px; color: var(--trace); line-height: 1.6; max-width: 78ch;
+  }
+  .foot code { font: 11.5px/1 var(--mono); }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .view > * { animation: rise .34s cubic-bezier(.2,.7,.3,1) backwards; }
+    .view > *:nth-child(2) { animation-delay: .04s; }
+    .view > *:nth-child(3) { animation-delay: .08s; }
+    .view > *:nth-child(4) { animation-delay: .12s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+  }
+  @media (prefers-reduced-motion: reduce) { .tick { transition: none; } }
+
+  @media (max-width: 960px) {
+    .bench { grid-template-columns: 1fr; }
+    .console { border-right: 0; border-bottom: 1px solid var(--bench-line); }
+    .readout { position: static; }
+    .strip { position: static; max-height: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rail">
+  <b>LensPub</b>
+  <span class="spike">spike · throwaway</span>
+  <span class="grow"></span>
+  <span class="envelope">engine <b>lenspub-spike/0.0.1</b> · tier <b>rule-based</b> · execution <b>local</b> · model <b>none</b></span>
+</div>
+
+<div class="bench">
+
+  <!-- ── console ──────────────────────────────────────────────── -->
+  <div class="console">
+    <div>
+      <h1>Describe how you want to read.</h1>
+      <p class="sub">Your words are compiled into a declarative Lens Manifest and then discarded. The manifest is the lens — the prompt never becomes part of it.</p>
+    </div>
+
+    <div class="field">
+      <label for="prompt">Prompt</label>
+      <textarea id="prompt" placeholder="e.g. I care most about school cybersecurity. Show me what is missing a citation."></textarea>
+      <div class="actions">
+        <button class="btn" id="apply">Apply lens</button>
+        <button class="btn ghost" id="clear">Remove lens</button>
+      </div>
+      <div class="chips" id="chips"></div>
+    </div>
+
+    <div class="panel" id="echo-panel" hidden>
+      <h2>What compiled</h2>
+      <p class="hint">Highlighted words became manifest fields. The rest was not understood and was dropped rather than guessed at.</p>
+      <div class="echo" id="echo"></div>
+      <div class="uncompiled" id="uncompiled"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Lens manifest <span class="n" id="ver">— none applied</span></h2>
+      <p class="hint">Live document. Teal lines changed on the last compile.</p>
+      <pre class="manifest" id="manifest"></pre>
+      <div class="note-ok" id="adr1">Contains no prompt text, no model weights, no reading history — <b>ADR-0001</b>, <b>ADR-0006</b>.</div>
+    </div>
+  </div>
+
+  <!-- ── substrate ────────────────────────────────────────────── -->
+  <div class="substrate">
+    <div class="readout" id="readout"></div>
+    <div class="stage">
+      <div class="strip" id="strip"></div>
+      <div class="view" id="view"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ENGINE — pure and DOM-free, exactly like poc/engine/*.js. The Node
+     verifier (verify-spike.mjs) pulls this <script> out by id and runs it,
+     so everything below is exercised by the test suite as well as the page.
+     ═══════════════════════════════════════════════════════════════════ -->
+<script id="lens-engine">
+(function (root) {
+  "use strict";
+
+  /* ── the backend truth ──────────────────────────────────────────
+     Twelve records from the repository's running example world (The
+     Example Journal, contentmill.example, the Exampleton school district).
+     Frozen at load: any attempt by the view layer to mutate a record
+     throws in strict mode instead of failing quietly. */
+
+  var SOURCE = [
+    { id: "r01", date: "2026-04-02", origin: "example-journal.example", author: "Riley Marsh",
+      title: "Two cloud vendors disclose breaches affecting regional districts",
+      body: "Both vendors held student rosters and assignment histories for districts across the Exampleton region; notification letters went out six weeks after discovery.",
+      topics: ["school cybersecurity", "data privacy"],
+      citations: ["https://ag.example.gov/breach-notices/2026-0114"],
+      c2pa: false, primarySource: null, counterpoint: null },
+
+    { id: "r02", date: "2026-04-21", origin: "example-journal.example", author: "Riley Marsh",
+      title: "District names its first dedicated security coordinator",
+      body: "The role was carved out of an existing network-administration line rather than funded new, and reports to the technology director.",
+      topics: ["school cybersecurity", "budget"],
+      citations: [],
+      c2pa: false, primarySource: { label: "Board minutes, April 21", url: "https://exampleton.k12.example/board/2026-04-21" }, counterpoint: null },
+
+    { id: "r03", date: "2026-05-06", origin: "contentmill.example", author: null,
+      title: "10 shocking facts about school data breaches",
+      body: "An unbylined listicle that repackages the April reporting without attribution and adds three figures that appear nowhere in the original.",
+      topics: ["school cybersecurity", "data privacy"],
+      citations: [],
+      c2pa: false, primarySource: null,
+      counterpoint: { source: "example-journal.example", author: "Riley Marsh", url: "https://example-journal.example/corrections/2026-05-09", note: "Correction desk traced three of the figures to no known source." } },
+
+    { id: "r04", date: "2026-05-18", origin: "example-journal.example", author: "Riley Marsh",
+      title: "District pilots local-first lesson planning",
+      body: "Documents live on classroom devices and synchronize only inside the school network, so teachers keep working when the connection drops.",
+      topics: ["local-first software", "school cybersecurity"],
+      citations: ["https://exampleton.k12.example/pilot/charter"],
+      c2pa: false, primarySource: { label: "Pilot charter", url: "https://exampleton.k12.example/pilot/charter" }, counterpoint: null },
+
+    { id: "r05", date: "2026-06-01", origin: "edu-audit.example.gov", author: "State Auditor's Office",
+      title: "State audit: 12 of 40 districts keep a formal patching schedule",
+      body: "The audit reviewed 40 districts over an 18-month window and published its instrument, sample, and per-district scores alongside the summary.",
+      topics: ["school cybersecurity"],
+      citations: ["https://education.example.gov/audits/regional-technology", "https://education.example.gov/audits/regional-technology/full-report"],
+      c2pa: true, primarySource: { label: "Full audit report", url: "https://education.example.gov/audits/regional-technology/full-report" }, counterpoint: null },
+
+    { id: "r06", date: "2026-06-09", origin: "example-journal.example", author: "Riley Marsh",
+      title: "Internal review finds 73 percent of teacher laptops missing critical updates",
+      body: "The review was presented to the board verbally; the district has not published the underlying inventory, and the figure appears in no other document.",
+      topics: ["school cybersecurity"],
+      citations: [],
+      c2pa: false, primarySource: null, counterpoint: null },
+
+    { id: "r07", date: "2026-06-14", origin: "vendorwire.example", author: "Vendor Communications",
+      title: "Cloud vendor announces education tier with on-device sync",
+      body: "A press release describing a forthcoming tier in which records are cached locally but a vendor account remains required to open a document.",
+      topics: ["vendor lock-in", "local-first software"],
+      citations: ["https://vendorwire.example/releases/edu-tier"],
+      c2pa: false, primarySource: null,
+      counterpoint: { source: "accessibility-lab.example", author: "Devi Raman", url: "https://accessibility-lab.example/notes/on-device-sync", note: "Argues account-gated local caching is not local-first in any useful sense." } },
+
+    { id: "r08", date: "2026-06-22", origin: "example-journal.example", author: "Nadia Okonjo",
+      title: "Parents ask what happens to student work under the new systems",
+      body: "Several parents at the June meeting asked whether vendors could still analyze student writing once documents stayed on district hardware.",
+      topics: ["data privacy"],
+      citations: [],
+      c2pa: false, primarySource: null, counterpoint: null },
+
+    { id: "r09", date: "2026-07-02", origin: "contentmill.example", author: null,
+      title: "AI grading tools are coming for your classroom",
+      body: "An unbylined roundup of vendor claims about automated assessment, with no district, product, or study named anywhere in the piece.",
+      topics: ["ai procurement"],
+      citations: [],
+      c2pa: false, primarySource: null, counterpoint: null },
+
+    { id: "r10", date: "2026-07-08", origin: "accessibility-lab.example", author: "Devi Raman",
+      title: "Offline-first tools and screen readers: what breaks",
+      body: "A test report on six offline-capable editors, finding that three lose live-region announcements the moment they drop the network connection.",
+      topics: ["accessibility", "local-first software"],
+      citations: ["https://accessibility-lab.example/method/2026-06", "https://www.w3.org/TR/wai-aria-1.2/", "https://accessibility-lab.example/data/offline-editors.csv"],
+      c2pa: false, primarySource: { label: "Test method and raw results", url: "https://accessibility-lab.example/data/offline-editors.csv" }, counterpoint: null },
+
+    { id: "r11", date: "2026-07-15", origin: "example-journal.example", author: "Nadia Okonjo",
+      title: "Board approves $340,000 for device refresh, defers AI pilot",
+      body: "The refresh passed unanimously; the assessment pilot was held over pending a procurement policy the board asked staff to draft by September.",
+      topics: ["budget", "ai procurement"],
+      citations: ["https://exampleton.k12.example/board/2026-07-15/resolution-14"],
+      c2pa: false, primarySource: { label: "Resolution 14", url: "https://exampleton.k12.example/board/2026-07-15/resolution-14" }, counterpoint: null },
+
+    { id: "r12", date: "2026-07-23", origin: "example-journal.example", author: "Riley Marsh",
+      title: "Neighboring district reverses local-first pilot after staffing gap",
+      body: "Westvale ended its pilot when the two staff who maintained the sync service left within a month of each other.",
+      topics: ["local-first software", "school cybersecurity"],
+      citations: ["https://westvale.k12.example/notices/pilot-wind-down"],
+      c2pa: false, primarySource: null,
+      counterpoint: { source: "exampleton.k12.example", author: "Dana Okafor", url: "https://exampleton.k12.example/statements/2026-07-25", note: "Exampleton's technology director attributes the reversal to staffing, not to the architecture." } }
+  ];
+  SOURCE.forEach(function (r) { Object.freeze(r.topics); Object.freeze(r.citations); Object.freeze(r); });
+  Object.freeze(SOURCE);
+
+  /* topic vocabulary the compiler can recognise, longest phrase first */
+  var TOPICS = [
+    { topic: "school cybersecurity", match: ["school cybersecurity", "school security", "cybersecurity", "security", "breach", "breaches", "patching"] },
+    { topic: "local-first software", match: ["local-first software", "local first", "local-first", "offline", "on-device", "on device"] },
+    { topic: "data privacy",         match: ["data privacy", "privacy", "student data"] },
+    { topic: "ai procurement",       match: ["ai procurement", "ai tools", "ai grading", "ai"] },
+    { topic: "vendor lock-in",       match: ["vendor lock-in", "lock-in", "lock in", "vendors", "vendor"] },
+    { topic: "accessibility",        match: ["accessibility", "screen reader", "screen readers", "a11y"] },
+    { topic: "budget",               match: ["budget", "spending", "cost", "costs", "money"] }
+  ];
+
+  var VIEW_RULES = [
+    { view: "evidence-table", match: ["evidence", "citation", "citations", "cited", "uncited", "sourced", "unsourced", "provenance", "receipts", "backed up", "checkable", "c2pa", "verify"] },
+    { view: "source-compare", match: ["compare", "by source", "per source", "who says", "which outlet", "versus", " vs ", "outlets", "publishers", "group by source"] },
+    { view: "timeline",       match: ["timeline", "chronological", "chronologically", "in order", "over time", "how it unfolded", "sequence"] },
+    { view: "priority-cards", match: ["care most", "care about", "prioriti", "most important", "focus on", "interested in", "emphasi", "rank", "ranked", "what matters"] },
+    { view: "digest",         match: ["summar", "digest", "brief", "tldr", "tl;dr", "skim", "quick read", "overview"] }
+  ];
+
+  var PROVENANCE_RULES = [
+    { signal: "citations",        match: ["citation", "citations", "cited", "uncited", "sourced", "unsourced", "footnote"] },
+    { signal: "c2pa",             match: ["c2pa", "content credential", "content credentials", "image provenance"] },
+    { signal: "author-identity",  match: ["author", "byline", "unbylined", "who wrote", "anonymous"] },
+    { signal: "publication-date", match: ["publication date", "date", "how old", "recency", "stale"] },
+    { signal: "corroboration",    match: ["corroborat", "confirmed elsewhere", "second source"] }
+  ];
+
+  var STOPWORDS = ("a an the and or but i me my we our you your it its is are was were be been am do does did " +
+    "of in on at to for from with without about into over under this that these those there here what which who whom " +
+    "when where why how all any both each few more most other some such no nor not only own same so than too very can " +
+    "will just should now please show me give tell want like as if then also thing things stuff really much lot get " +
+    "see look make find keep let s t don t isn aren").split(/\s+/);
+
+  function norm(s) { return String(s || "").toLowerCase(); }
+
+  function findPhrase(text, phrases) {
+    for (var i = 0; i < phrases.length; i++) {
+      var idx = text.indexOf(phrases[i]);
+      if (idx !== -1) return { phrase: phrases[i], index: idx };
+    }
+    return null;
+  }
+
+  /* ── the compiler ───────────────────────────────────────────────
+     Prompt text in, declarative Lens Manifest out. Deterministic, no
+     model, no network. Everything it could not map is reported rather
+     than guessed at — honest degradation, the same posture the engine
+     spec takes toward anchoring. */
+
+  function compilePrompt(promptText, previousVersion) {
+    var text = " " + norm(promptText).replace(/[^\w\s.'’-]/g, " ").replace(/\s+/g, " ") + " ";
+    var matched = [];      // phrases that became manifest fields
+    var priorities = [];
+    var trusted = [], distrusted = [], provenance = [];
+    var presentation = {};
+    var view = null;
+
+    function claim(phrase, field) { matched.push({ phrase: phrase, field: field }); }
+
+    // negation windows: "less about X", "not interested in X", "skip X"
+    var negators = ["less ", "not interested in ", "no interest in ", "skip ", "ignore ", "de-emphasi", "deemphasi", "less of ", "fewer "];
+    var boosters = ["most", "really", "very", "above all", "especially", "primarily", "chiefly"];
+
+    // ── priorities
+    TOPICS.forEach(function (t) {
+      var hit = findPhrase(text, t.match);
+      if (!hit) return;
+      var before = text.slice(Math.max(0, hit.index - 34), hit.index);
+      var neg = negators.filter(function (n) { return before.indexOf(n) !== -1; })[0];
+      var boost = boosters.filter(function (b) { return before.indexOf(b) !== -1; })[0];
+      var weight = neg ? -0.5 : (boost ? 0.9 : 0.7);
+      priorities.push({ topic: t.topic, weight: weight });
+      claim(hit.phrase, "/interpretation/priorities");
+      // the modifier set the weight, so report it as compiled too
+      if (neg) claim(neg.trim(), "/interpretation/priorities");
+      if (boost) claim(boost.trim(), "/interpretation/priorities");
+    });
+
+    // ── source trust
+    var trustRe = /\btrust ([a-z0-9.-]+\.[a-z]{2,}(?:\.[a-z]{2,})?)/g, m;
+    while ((m = trustRe.exec(text)) !== null) {
+      trusted.push({ origin: m[1], weight: 0.9 });
+      claim(m[0].trim(), "/interpretation/sources/trusted");
+    }
+    var distrustRe = /\b(?:distrust|don't trust|dont trust|doubt|wary of|sceptical of|skeptical of) ([a-z0-9.-]+\.[a-z]{2,}(?:\.[a-z]{2,})?)/g;
+    while ((m = distrustRe.exec(text)) !== null) {
+      distrusted.push({ origin: m[1], weight: 0.8 });
+      claim(m[0].trim(), "/interpretation/sources/distrusted");
+    }
+
+    // ── provenance signals to surface
+    PROVENANCE_RULES.forEach(function (p) {
+      var hit = findPhrase(text, p.match);
+      if (!hit) return;
+      if (provenance.indexOf(p.signal) === -1) provenance.push(p.signal);
+      claim(hit.phrase, "/interpretation/sources/requireProvenance");
+    });
+
+    // ── presentation
+    if (findPhrase(text, ["in detail", "detailed", "full", "in depth", "in-depth", "everything"])) {
+      presentation.summaries = "detailed"; claim(findPhrase(text, ["in detail", "detailed", "full", "in depth", "in-depth", "everything"]).phrase, "/interpretation/presentation/summaries");
+    } else if (findPhrase(text, ["brief", "short", "one line", "skim", "tldr", "tl;dr", "quick"])) {
+      presentation.summaries = "brief"; claim(findPhrase(text, ["brief", "short", "one line", "skim", "tldr", "tl;dr", "quick"]).phrase, "/interpretation/presentation/summaries");
+    }
+    var cp = findPhrase(text, ["counterpoint", "counterpoints", "other side", "critique", "criticism", "pushback", "disagree"]);
+    if (cp) { presentation.counterpoints = "auto"; claim(cp.phrase, "/interpretation/presentation/counterpoints"); }
+    var ex = findPhrase(text, ["explain", "why am i", "reasoning", "show your work", "justify"]);
+    if (ex) { presentation.explanationDisplay = "always"; claim(ex.phrase, "/interpretation/presentation/explanationDisplay"); }
+    var ps = findPhrase(text, ["primary source", "primary sources", "original document", "the paper", "the report"]);
+    if (ps) { presentation.primarySourceExpansion = true; claim(ps.phrase, "/interpretation/presentation/primarySourceExpansion"); }
+    if (provenance.length) presentation.evidenceIndicators = true;
+
+    // ── view (an extension: v0.1 has no presentation.view field)
+    for (var i = 0; i < VIEW_RULES.length && !view; i++) {
+      var hit = findPhrase(text, VIEW_RULES[i].match);
+      if (hit) { view = VIEW_RULES[i].view; claim(hit.phrase, "/extensions/spike:view"); }
+    }
+    if (!view) view = priorities.length ? "priority-cards" : "digest";
+
+    // ── what did not compile
+    var claimedWords = {};
+    matched.forEach(function (c) { c.phrase.split(/\s+/).forEach(function (w) { claimedWords[w] = true; }); });
+    var uncompiled = [];
+    text.trim().split(/\s+/).forEach(function (w) {
+      var bare = w.replace(/^[^a-z0-9]+|[^a-z0-9]+$/g, "");
+      if (bare.length < 3) return;
+      if (claimedWords[bare] || claimedWords[w]) return;
+      if (STOPWORDS.indexOf(bare) !== -1) return;
+      if (uncompiled.indexOf(bare) === -1) uncompiled.push(bare);
+    });
+
+    // ── assemble a schema-valid manifest.
+    // Note what is NOT here: the prompt itself. It was an authoring input;
+    // the compiled artefact is the lens (ADR-0001).
+    var interpretation = {};
+    if (priorities.length) interpretation.priorities = priorities;
+    var sources = {};
+    if (trusted.length) sources.trusted = trusted;
+    if (distrusted.length) sources.distrusted = distrusted;
+    if (provenance.length) sources.requireProvenance = provenance;
+    if (Object.keys(sources).length) interpretation.sources = sources;
+    if (Object.keys(presentation).length) interpretation.presentation = presentation;
+
+    var manifest = {
+      lenspub: "0.1",
+      type: "LensManifest",
+      metadata: {
+        name: "Prompt-composed lens",
+        description: describe(priorities, sources, presentation),
+        lensVersion: bump(previousVersion),
+        language: "en"
+      },
+      interpretation: interpretation,
+      adaptation: { defaultPolicy: "locked" },
+      privacy: { remoteInference: { allowed: false } },
+      extensions: { "spike:view": view }
+    };
+
+    return { manifest: manifest, view: view, matched: matched, uncompiled: uncompiled };
+  }
+
+  function bump(previous) {
+    if (!previous) return "1.0.0";
+    var p = String(previous).split(".").map(Number);
+    return p[0] + "." + (p[1] + 1) + ".0";
+  }
+
+  function describe(priorities, sources, presentation) {
+    var parts = [];
+    var up = priorities.filter(function (p) { return p.weight > 0; }).map(function (p) { return p.topic; });
+    var down = priorities.filter(function (p) { return p.weight < 0; }).map(function (p) { return p.topic; });
+    if (up.length) parts.push("Emphasizes " + list(up));
+    if (down.length) parts.push("de-emphasizes " + list(down));
+    if (sources.requireProvenance) parts.push("surfaces missing " + list(sources.requireProvenance));
+    if (sources.trusted) parts.push("trusts " + list(sources.trusted.map(function (s) { return s.origin; })));
+    if (sources.distrusted) parts.push("flags " + list(sources.distrusted.map(function (s) { return s.origin; })));
+    if (presentation.counterpoints === "auto") parts.push("attaches counterpoints where one exists");
+    if (!parts.length) return "A lens that changes nothing about how records are presented.";
+    return parts.join("; ").replace(/^./, function (c) { return c.toUpperCase(); }) + ".";
+  }
+
+  function list(xs) {
+    if (xs.length === 1) return xs[0];
+    if (xs.length === 2) return xs[0] + " and " + xs[1];
+    return xs.slice(0, -1).join(", ") + ", and " + xs[xs.length - 1];
+  }
+
+  /* ── applying a lens ────────────────────────────────────────────
+     Produces a view description. Pure data: no DOM, no mutation of
+     SOURCE. Every record in SOURCE appears in exactly one group of the
+     result — the caller checks this, and so does the Node verifier. */
+
+  function pointerLabel(ptr) {
+    var map = {
+      "/interpretation/priorities": "your topic priorities",
+      "/interpretation/sources/trusted": "your trusted sources",
+      "/interpretation/sources/distrusted": "your distrusted sources",
+      "/interpretation/sources/requireProvenance": "the provenance signals you asked to see",
+      "/interpretation/presentation/summaries": "your summary length",
+      "/interpretation/presentation/counterpoints": "your counterpoint setting",
+      "/interpretation/presentation/explanationDisplay": "your explanation setting",
+      "/interpretation/presentation/primarySourceExpansion": "your primary-source setting",
+      "/extensions/spike:view": "the view this lens asked for"
+    };
+    return map[ptr.replace(/\/\d+(\/\w+)*$/, function (m) { return m.replace(/\/\d+/, ""); })] || map[ptr] || ptr;
+  }
+
+  function scoreOf(rec, manifest) {
+    var prios = (manifest.interpretation && manifest.interpretation.priorities) || [];
+    var score = 0, hits = [];
+    prios.forEach(function (p, i) {
+      if (rec.topics.indexOf(p.topic) !== -1) { score += p.weight; hits.push({ p: p, i: i }); }
+    });
+    return { score: score, hits: hits };
+  }
+
+  function trustOf(rec, manifest) {
+    var s = (manifest.interpretation && manifest.interpretation.sources) || {};
+    var t = (s.trusted || []).filter(function (x) { return x.origin === rec.origin; })[0];
+    if (t) return { kind: "trusted", entry: t };
+    var d = (s.distrusted || []).filter(function (x) { return x.origin === rec.origin; })[0];
+    if (d) return { kind: "distrusted", entry: d };
+    return { kind: "unlabeled", entry: null };
+  }
+
+  function evidenceCells(rec, signals) {
+    return signals.map(function (sig) {
+      switch (sig) {
+        case "citations":
+          return rec.citations.length
+            ? { key: sig, state: "present", label: "Cites " + rec.citations.length + " source" + (rec.citations.length > 1 ? "s" : ""), basis: rec.citations.join("  ") }
+            : { key: sig, state: "absent", label: "No citation found", basis: "No outbound reference in the record." };
+        case "c2pa":
+          return rec.c2pa
+            ? { key: sig, state: "present", label: "C2PA credential present", basis: "Content Credentials attached to the record's imagery." }
+            : { key: sig, state: "absent", label: "No content credential", basis: "No C2PA manifest attached." };
+        case "author-identity":
+          return rec.author
+            ? { key: sig, state: "present", label: "Bylined", basis: rec.author }
+            : { key: sig, state: "absent", label: "No author named", basis: "The record carries no byline." };
+        case "publication-date":
+          return { key: sig, state: "present", label: rec.date, basis: "Publication date as recorded." };
+        case "corroboration":
+          return rec.counterpoint
+            ? { key: sig, state: "present", label: "Related source on file", basis: rec.counterpoint.source + " — " + rec.counterpoint.note }
+            : { key: sig, state: "absent", label: "No second source on file", basis: "Nothing in this set refers to the same claim." };
+        default:
+          return { key: sig, state: "absent", label: "Not evaluated", basis: "" };
+      }
+    });
+  }
+
+  function applyLens(manifest) {
+    var view = (manifest.extensions && manifest.extensions["spike:view"]) || "digest";
+    var pres = (manifest.interpretation && manifest.interpretation.presentation) || {};
+    var signals = ((manifest.interpretation || {}).sources || {}).requireProvenance || ["citations", "author-identity"];
+
+    var entries = SOURCE.map(function (rec, idx) {
+      var s = scoreOf(rec, manifest);
+      var t = trustOf(rec, manifest);
+      var badges = [], why = [], refs = [];
+
+      s.hits.forEach(function (h) {
+        var verb = h.p.weight >= 0 ? "Emphasized" : "De-emphasized";
+        badges.push({ tone: h.p.weight >= 0 ? "coat" : "mute", label: verb.toLowerCase() + ": " + h.p.topic + " " + (h.p.weight > 0 ? "+" : "") + h.p.weight });
+        why.push(verb + " because your lens weights “" + h.p.topic + "” at " + h.p.weight + ", and this record carries that topic.");
+        refs.push({ ptr: "/interpretation/priorities/" + h.i + "/weight", label: pointerLabel("/interpretation/priorities") });
+      });
+
+      if (t.kind === "trusted") {
+        badges.push({ tone: "coat", label: "trusted source" });
+        why.push("Marked trusted because you named " + rec.origin + " as a trusted source.");
+        refs.push({ ptr: "/interpretation/sources/trusted", label: pointerLabel("/interpretation/sources/trusted") });
+      } else if (t.kind === "distrusted") {
+        badges.push({ tone: "flag", label: "distrusted source" });
+        why.push("Flagged because you named " + rec.origin + " as distrusted. The record is still shown in full — distrust changes prominence, never visibility.");
+        refs.push({ ptr: "/interpretation/sources/distrusted", label: pointerLabel("/interpretation/sources/distrusted") });
+      }
+
+      var cells = evidenceCells(rec, signals);
+      if (pres.evidenceIndicators) {
+        cells.filter(function (c) { return c.state === "absent"; }).forEach(function (c) {
+          badges.push({ tone: "fil", label: c.label });
+        });
+        if (cells.some(function (c) { return c.state === "absent"; })) {
+          why.push("Evidence indicators are on because you asked for " + list(signals) + " to be surfaced. An indicator reports what is checkable; it is not a judgement of the claim.");
+          refs.push({ ptr: "/interpretation/sources/requireProvenance", label: pointerLabel("/interpretation/sources/requireProvenance") });
+        }
+      }
+      if (pres.counterpoints === "auto" && rec.counterpoint) {
+        badges.push({ tone: "fil", label: "counterpoint attached" });
+        why.push("A counterpoint is attached because your lens sets counterpoints to auto. It is an existing, attributed source — never the engine's own rebuttal.");
+        refs.push({ ptr: "/interpretation/presentation/counterpoints", label: pointerLabel("/interpretation/presentation/counterpoints") });
+      }
+      if (pres.primarySourceExpansion && rec.primarySource) {
+        badges.push({ tone: "coat", label: "primary source: " + rec.primarySource.label });
+        refs.push({ ptr: "/interpretation/presentation/primarySourceExpansion", label: pointerLabel("/interpretation/presentation/primarySourceExpansion") });
+      }
+
+      return {
+        recId: rec.id, rec: rec, index: idx, score: s.score, trust: t.kind,
+        badges: badges, cells: cells,
+        summaries: pres.summaries || "brief",
+        why: why.length ? why : ["Shown because every record is always shown. Nothing in your lens changed how this one is presented."],
+        refs: refs
+      };
+    });
+
+    var groups = [], reordered = false, note = "", heading = "";
+
+    if (view === "evidence-table") {
+      heading = "Evidence table";
+      note = "One row per record, one column per provenance signal your lens asked to see. Each cell states a checkable fact and its basis. No cell says true or false — ADR-0007.";
+      groups = [{ id: "all", label: "All records · canonical order", entries: entries, columns: signals }];
+
+    } else if (view === "timeline") {
+      heading = "Timeline";
+      note = "The same twelve records, ordered by publication date.";
+      reordered = true;
+      groups = [{ id: "all", label: "Oldest first", entries: entries.slice().sort(function (a, b) { return a.rec.date < b.rec.date ? -1 : 1; }) }];
+
+    } else if (view === "source-compare") {
+      heading = "By source";
+      note = "Records grouped by where they came from, with your trust labels applied. Grouping changes adjacency, not membership.";
+      reordered = true;
+      var order = { trusted: 0, unlabeled: 1, distrusted: 2 };
+      var byOrigin = {};
+      entries.forEach(function (e) { (byOrigin[e.rec.origin] = byOrigin[e.rec.origin] || []).push(e); });
+      groups = Object.keys(byOrigin).sort(function (a, b) {
+        var ta = order[byOrigin[a][0].trust], tb = order[byOrigin[b][0].trust];
+        return ta !== tb ? ta - tb : (a < b ? -1 : 1);
+      }).map(function (origin) {
+        var g = byOrigin[origin];
+        return { id: origin, label: origin, note: g[0].trust === "trusted" ? "You named this source trusted." : g[0].trust === "distrusted" ? "You named this source distrusted. Every record from it is still here, in full." : "No trust label in your lens.", entries: g };
+      });
+
+    } else if (view === "priority-cards") {
+      heading = "Ranked by your priorities";
+      note = "Weighted records first. Records your lens does not weight, and records it de-emphasizes, follow — present, labelled, and readable. De-emphasis changes prominence, never visibility (ADR-0008).";
+      reordered = true;
+      var up = entries.filter(function (e) { return e.score > 0; }).sort(function (a, b) { return b.score - a.score || a.index - b.index; });
+      var flat = entries.filter(function (e) { return e.score === 0; });
+      var down = entries.filter(function (e) { return e.score < 0; });
+      if (up.length)   groups.push({ id: "up",   label: "Weighted by your lens", note: "Ordered by the sum of the priority weights that matched.", entries: up });
+      if (flat.length) groups.push({ id: "flat", label: "Not weighted by your lens", note: "Nothing in your manifest addresses these. Canonical order, unchanged.", entries: flat });
+      if (down.length) groups.push({ id: "down", label: "De-emphasized by your lens", note: "Moved down, never hidden. Open any one — it is the whole record.", entries: down });
+
+    } else {
+      heading = "Digest";
+      note = "Every record, canonical order, summarised at the length your lens asked for.";
+      groups = [{ id: "all", label: "All records · canonical order", entries: entries }];
+    }
+
+    var presented = [];
+    groups.forEach(function (g) { g.entries.forEach(function (e) { presented.push(e.recId); }); });
+
+    return {
+      view: view, heading: heading, note: note, reordered: reordered,
+      groups: groups, presented: presented,
+      signals: signals,
+      envelope: { engine: "lenspub-spike", version: "0.0.1", tier: "rule-based", executionLocation: "local", model: "none (rule-based)" }
+    };
+  }
+
+  /* FNV-1a, 32-bit. Used to show that SOURCE is byte-identical before and
+     after every render — the invariant readout is a measurement, not a claim. */
+  function hash(str) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) >>> 0;
+    }
+    return ("00000000" + h.toString(16)).slice(-8);
+  }
+
+  var EXAMPLES = [
+    "I care most about school cybersecurity. Show me what is missing a citation.",
+    "Give me an evidence table — citations, bylines, content credentials.",
+    "Compare what the different sources say. I distrust contentmill.example and trust example-journal.example.",
+    "Build a timeline of how this unfolded.",
+    "Brief digest please, with counterpoints, and explain your reasoning.",
+    "I care about local-first software and accessibility, less about budget."
+  ];
+
+  root.LensSpike = {
+    SOURCE: SOURCE, TOPICS: TOPICS, EXAMPLES: EXAMPLES,
+    compilePrompt: compilePrompt, applyLens: applyLens,
+    pointerLabel: pointerLabel, hash: hash, list: list
+  };
+})(typeof globalThis !== "undefined" ? globalThis : this);
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     UI — rendering only. Reads from the engine, never writes to SOURCE.
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  "use strict";
+  var E = window.LensSpike;
+  var BASELINE = E.hash(JSON.stringify(E.SOURCE));
+
+  var state = { manifest: null, result: null, pane: "lens", lastManifestText: "", version: null };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var el = function (tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  };
+
+  /* ── console: example chips ─────────────────────────────────── */
+  E.EXAMPLES.forEach(function (ex) {
+    var c = el("button", "chip", ex);
+    c.type = "button";
+    c.addEventListener("click", function () { $("prompt").value = ex; apply(); });
+    $("chips").appendChild(c);
+  });
+
+  /* ── console: manifest viewer with changed-line marking ─────── */
+  function renderManifest(manifest) {
+    var pre = $("manifest");
+    pre.textContent = "";
+    if (!manifest) {
+      pre.appendChild(el("span", "ln", "no lens applied — the records below are the substrate, unmediated"));
+      $("ver").textContent = "— none applied";
+      state.lastManifestText = "";
+      return;
+    }
+    var text = JSON.stringify(manifest, null, 2);
+    var prev = state.lastManifestText ? state.lastManifestText.split("\n") : [];
+    var prevCount = {};
+    prev.forEach(function (l) { prevCount[l] = (prevCount[l] || 0) + 1; });
+
+    text.split("\n").forEach(function (line) {
+      var ln = el("span", "ln");
+      if (prevCount[line]) { prevCount[line]--; } else if (prev.length) { ln.classList.add("changed"); }
+      // minimal syntax colouring
+      var m = line.match(/^(\s*)("(?:[^"\\]|\\.)*")(\s*:\s*)?(.*)$/);
+      if (m && m[3]) {
+        ln.appendChild(document.createTextNode(m[1]));
+        ln.appendChild(el("span", "k", m[2]));
+        ln.appendChild(document.createTextNode(m[3]));
+        var rest = m[4];
+        var cls = /^"/.test(rest) ? "s" : /^-?\d/.test(rest) ? "n" : null;
+        if (cls) ln.appendChild(el("span", cls, rest)); else ln.appendChild(document.createTextNode(rest));
+      } else {
+        ln.textContent = line;
+      }
+      pre.appendChild(ln);
+    });
+    state.lastManifestText = text;
+    $("ver").textContent = "v" + manifest.metadata.lensVersion;
+  }
+
+  /* ── console: prompt echo ───────────────────────────────────── */
+  function renderEcho(promptText, compiled) {
+    $("echo-panel").hidden = !promptText;
+    if (!promptText) return;
+
+    var echo = $("echo");
+    echo.textContent = "";
+    var phrases = compiled.matched.map(function (m) { return m.phrase; })
+      .sort(function (a, b) { return b.length - a.length; });
+
+    var lower = promptText.toLowerCase(), i = 0;
+    while (i < promptText.length) {
+      var hit = null;
+      for (var p = 0; p < phrases.length; p++) {
+        if (lower.startsWith(phrases[p], i)) { hit = phrases[p]; break; }
+      }
+      if (hit) {
+        var mark = el("mark", null, promptText.substr(i, hit.length));
+        var fields = compiled.matched.filter(function (m) { return m.phrase === hit; }).map(function (m) { return m.field; });
+        mark.title = "compiled into " + fields.join(", ");
+        echo.appendChild(mark);
+        i += hit.length;
+      } else {
+        echo.appendChild(document.createTextNode(promptText[i]));
+        i++;
+      }
+    }
+
+    var unc = $("uncompiled");
+    unc.textContent = "";
+    if (compiled.uncompiled.length) {
+      unc.appendChild(document.createTextNode("Not understood, and therefore dropped: "));
+      compiled.uncompiled.slice(0, 14).forEach(function (w) { unc.appendChild(el("code", null, w)); });
+    } else {
+      unc.textContent = "Every meaningful word mapped to a manifest field.";
+    }
+  }
+
+  /* ── substrate: readout + strip ─────────────────────────────── */
+  function renderReadout(result) {
+    var r = $("readout");
+    r.textContent = "";
+
+    var live = E.hash(JSON.stringify(E.SOURCE));
+    var intact = live === BASELINE;
+    var presented = result ? result.presented.length : E.SOURCE.length;
+    var complete = presented === E.SOURCE.length;
+
+    function cell(label, value, bad) {
+      var c = el("div", "cell" + (bad ? " bad" : ""));
+      c.appendChild(document.createTextNode(label + " "));
+      c.appendChild(el("b", null, value));
+      return c;
+    }
+
+    r.appendChild(cell("records", presented + " / " + E.SOURCE.length, !complete));
+    r.appendChild(cell("substrate", intact ? "unmodified · " + live : "MUTATED", !intact));
+    r.appendChild(cell("order", result && result.reordered ? "lens view reordered · source intact" : "canonical", false));
+    r.appendChild(el("div", "grow"));
+
+    var seg = el("div", "seg");
+    [["lens", "Lens view"], ["source", "Source of truth"]].forEach(function (pair) {
+      var b = el("button", null, pair[1]);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(state.pane === pair[0]));
+      b.addEventListener("click", function () { state.pane = pair[0]; render(); });
+      seg.appendChild(b);
+    });
+    r.appendChild(seg);
+  }
+
+  function renderStrip(result) {
+    var s = $("strip");
+    s.textContent = "";
+    s.appendChild(el("div", "cap", "substrate"));
+    var shown = {};
+    if (result) result.presented.forEach(function (id) { shown[id] = true; });
+
+    E.SOURCE.forEach(function (rec) {
+      var t = el("div", "tick");
+      t.title = rec.id + " · " + rec.title;
+      if (!result) t.classList.add("dim");
+      else if (shown[rec.id]) t.classList.add("lit");
+      else t.classList.add("missing");
+      s.appendChild(t);
+    });
+    s.appendChild(el("div", "count", (result ? result.presented.length : E.SOURCE.length) + "/" + E.SOURCE.length));
+  }
+
+  /* ── substrate: records ─────────────────────────────────────── */
+  function traceNode(entry) {
+    var t = el("div", "trace");
+    t.hidden = true;
+    entry.why.forEach(function (w) { t.appendChild(el("p", null, w)); });
+    if (entry.refs.length) {
+      var refs = el("div", "refs");
+      var seen = {};
+      entry.refs.forEach(function (r) {
+        if (seen[r.ptr]) return;
+        seen[r.ptr] = true;
+        var line = el("span");
+        line.appendChild(el("b", null, r.label));
+        line.appendChild(document.createTextNode("  " + r.ptr));
+        refs.appendChild(line);
+      });
+      t.appendChild(refs);
+    }
+    return t;
+  }
+
+  function whyButton(trace) {
+    var b = el("button", "why", "?");
+    b.type = "button";
+    b.setAttribute("aria-label", "Why am I seeing this?");
+    b.addEventListener("click", function () {
+      trace.hidden = !trace.hidden;
+      b.setAttribute("aria-expanded", String(!trace.hidden));
+    });
+    return b;
+  }
+
+  function recordCard(entry, opts) {
+    opts = opts || {};
+    var rec = entry.rec;
+    var card = el("div", "rec" + (entry.score > 0 ? " emph" : entry.score < 0 ? " deemph" : ""));
+    card.setAttribute("data-rec", rec.id);
+
+    var meta = el("div", "meta");
+    meta.appendChild(el("span", "id", rec.id));
+    meta.appendChild(el("span", null, rec.date));
+    meta.appendChild(el("span", null, rec.origin));
+    meta.appendChild(el("span", null, rec.author || "no byline"));
+    card.appendChild(meta);
+
+    card.appendChild(el("h4", null, rec.title));
+
+    if (entry.summaries !== "none") {
+      var line = el("p", "line" + (entry.summaries === "brief" ? " brief" : ""),
+        entry.summaries === "brief" ? rec.body.split(/;|,\s(?=[a-z])/)[0].replace(/\.$/, "") + "." : rec.body);
+      card.appendChild(line);
+    }
+
+    if (entry.badges.length) {
+      var badges = el("div", "badges");
+      entry.badges.forEach(function (b) { badges.appendChild(el("span", "badge " + b.tone, b.label)); });
+      card.appendChild(badges);
+    }
+
+    if (opts.counterpoint && rec.counterpoint) {
+      var cp = el("div", "trace");
+      cp.appendChild(el("p", null, "Counterpoint — " + rec.counterpoint.author + ", " + rec.counterpoint.source + ": " + rec.counterpoint.note));
+      var a = el("a", null, rec.counterpoint.url);
+      a.href = rec.counterpoint.url; a.rel = "noreferrer";
+      cp.appendChild(a);
+      card.appendChild(cp);
+    }
+
+    var trace = traceNode(entry);
+    card.appendChild(trace);
+    card.appendChild(whyButton(trace));
+    if (opts.explain) { trace.hidden = false; }
+    return card;
+  }
+
+  function evidenceTable(group, result) {
+    var wrap = el("div");
+    var table = el("table", "etable");
+    var head = el("tr");
+    head.appendChild(el("th", null, "Record"));
+    group.columns.forEach(function (c) { head.appendChild(el("th", null, c.replace("-", " "))); });
+    head.appendChild(el("th", null, "Why"));
+    var thead = document.createElement("thead"); thead.appendChild(head); table.appendChild(thead);
+
+    var tbody = document.createElement("tbody");
+    group.entries.forEach(function (entry) {
+      var tr = el("tr");
+      tr.setAttribute("data-rec", entry.recId);
+
+      var first = el("td", "rec-cell");
+      first.appendChild(el("b", null, entry.rec.title));
+      first.appendChild(el("span", null, entry.recId + " · " + entry.rec.date + " · " + entry.rec.origin));
+      tr.appendChild(first);
+
+      entry.cells.forEach(function (c) {
+        var td = el("td");
+        var s = el("span", "cellstate " + c.state, c.label);
+        if (c.basis) s.appendChild(el("span", "basis", c.basis));
+        td.appendChild(s);
+        tr.appendChild(td);
+      });
+
+      var last = el("td");
+      var trace = traceNode(entry);
+      last.appendChild(whyButton(trace));
+      last.appendChild(trace);
+      tr.appendChild(last);
+
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    return wrap;
+  }
+
+  /* ── the source pane: the truth, rendered as plain bullets ──── */
+  function renderSourcePane() {
+    var v = $("view");
+    v.textContent = "";
+
+    var head = el("div", "viewhead");
+    head.appendChild(el("div", "kindtag", "substrate"));
+    head.appendChild(el("h2", null, "Source of truth"));
+    head.appendChild(el("p", null, "Twelve records, exactly as the backend holds them: canonical order, full text, no lens. This pane is unreachable by the lens layer — the records are frozen, and the readout above hashes them on every render."));
+    v.appendChild(head);
+
+    var list = el("div", "group");
+    E.SOURCE.forEach(function (rec) {
+      var card = el("div", "rec");
+      card.setAttribute("data-rec", rec.id);
+      var meta = el("div", "meta");
+      meta.appendChild(el("span", "id", rec.id));
+      meta.appendChild(el("span", null, rec.date));
+      meta.appendChild(el("span", null, rec.origin));
+      meta.appendChild(el("span", null, rec.author || "no byline"));
+      meta.appendChild(el("span", null, rec.topics.join(" · ")));
+      card.appendChild(meta);
+      card.appendChild(el("h4", null, rec.title));
+      card.appendChild(el("p", "line", rec.body));
+      list.appendChild(card);
+    });
+    v.appendChild(list);
+    v.appendChild(footNote());
+  }
+
+  function footNote() {
+    var f = el("div", "foot");
+    f.appendChild(document.createTextNode(
+      "Spike, not specification. The engine is rule-based and runs locally; there is no model and no network call. " +
+      "The view field is carried as extensions[\"spike:view\"] because Lens Manifest v0.1 has no presentation.view — " +
+      "whether generated views belong in the manifest at all is one of the questions this spike exists to raise."
+    ));
+    return f;
+  }
+
+  /* ── the lens pane ──────────────────────────────────────────── */
+  function renderLensPane() {
+    var v = $("view");
+    v.textContent = "";
+    var result = state.result;
+
+    if (!result) {
+      var head = el("div", "viewhead");
+      head.appendChild(el("h2", null, "No lens applied."));
+      head.appendChild(el("p", null, "The records on the right are the backend truth. Describe how you want to read them and the prompt will be compiled into a lens — a declarative manifest you can read, edit, version, and hand to someone else."));
+      v.appendChild(head);
+      renderSourceBullets(v);
+      v.appendChild(footNote());
+      return;
+    }
+
+    var pres = (state.manifest.interpretation || {}).presentation || {};
+    var head = el("div", "viewhead");
+    var tag = el("div", "kindtag", result.view);
+    head.appendChild(tag);
+    if (result.reordered) {
+      var ro = el("span", "reorder", "reordered by lens");
+      ro.title = "The lens view changes order. The source pane and the substrate strip keep canonical order.";
+      head.appendChild(ro);
+    }
+    head.appendChild(el("h2", null, result.heading));
+    head.appendChild(el("p", null, result.note));
+    v.appendChild(head);
+
+    result.groups.forEach(function (g) {
+      var group = el("div", "group");
+      var h = el("h3");
+      h.appendChild(document.createTextNode(g.label));
+      h.appendChild(el("span", null, g.entries.length + " record" + (g.entries.length > 1 ? "s" : "")));
+      group.appendChild(h);
+      if (g.note) group.appendChild(el("p", "gnote", g.note));
+
+      if (result.view === "evidence-table") {
+        group.appendChild(evidenceTable(g, result));
+      } else {
+        var body = el("div", result.view === "timeline" ? "tl" : "");
+        g.entries.forEach(function (entry) {
+          body.appendChild(recordCard(entry, {
+            counterpoint: pres.counterpoints === "auto",
+            explain: pres.explanationDisplay === "always"
+          }));
+        });
+        group.appendChild(body);
+      }
+      v.appendChild(group);
+    });
+
+    v.appendChild(footNote());
+  }
+
+  function renderSourceBullets(v) {
+    var group = el("div", "group");
+    var h = el("h3");
+    h.appendChild(document.createTextNode("Substrate · canonical order"));
+    h.appendChild(el("span", null, E.SOURCE.length + " records"));
+    group.appendChild(h);
+    E.SOURCE.forEach(function (rec) {
+      var card = el("div", "rec");
+      card.setAttribute("data-rec", rec.id);
+      var meta = el("div", "meta");
+      meta.appendChild(el("span", "id", rec.id));
+      meta.appendChild(el("span", null, rec.date));
+      meta.appendChild(el("span", null, rec.origin));
+      meta.appendChild(el("span", null, rec.topics.join(" · ")));
+      card.appendChild(meta);
+      card.appendChild(el("h4", null, rec.title));
+      card.appendChild(el("p", "line", rec.body));
+      group.appendChild(card);
+    });
+    v.appendChild(group);
+  }
+
+  /* ── orchestration ──────────────────────────────────────────── */
+  function render() {
+    renderReadout(state.result);
+    renderStrip(state.result);
+    if (state.pane === "source") renderSourcePane(); else renderLensPane();
+    verifyDom();
+  }
+
+  // After every render, confirm that every canonical record id is present
+  // in the DOM of the lens pane. A view that quietly drops a record turns
+  // the readout red instead of looking tidy.
+  function verifyDom() {
+    if (!state.result || state.pane !== "lens") return;
+    var found = {};
+    document.querySelectorAll("#view [data-rec]").forEach(function (n) { found[n.getAttribute("data-rec")] = true; });
+    var missing = E.SOURCE.filter(function (r) { return !found[r.id]; });
+    if (missing.length) {
+      var cell = $("readout").firstChild;
+      cell.className = "cell bad";
+      cell.textContent = "records " + (E.SOURCE.length - missing.length) + " / " + E.SOURCE.length + " — DROPPED " + missing.map(function (r) { return r.id; }).join(", ");
+    }
+  }
+
+  function apply() {
+    var text = $("prompt").value.trim();
+    if (!text) { clear(); return; }
+    var compiled = E.compilePrompt(text, state.version);
+    state.manifest = compiled.manifest;
+    state.version = compiled.manifest.metadata.lensVersion;
+    state.result = E.applyLens(compiled.manifest);
+    state.pane = "lens";
+    renderEcho(text, compiled);
+    renderManifest(compiled.manifest);
+    render();
+  }
+
+  function clear() {
+    state.manifest = null; state.result = null; state.pane = "lens";
+    $("prompt").value = "";
+    $("echo-panel").hidden = true;
+    renderManifest(null);
+    render();
+  }
+
+  $("apply").addEventListener("click", apply);
+  $("clear").addEventListener("click", clear);
+  $("prompt").addEventListener("keydown", function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter") apply();
+  });
+
+  renderManifest(null);
+  render();
+})();
+</script>
+
+</body>
+</html>
