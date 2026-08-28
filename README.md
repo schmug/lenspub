@@ -38,6 +38,7 @@ New here? Read these in order:
 | [`schemas/`](schemas/) | JSON Schemas for the three exchange objects |
 | [`examples/`](examples/) | Five example manifests, an example diff, and the [end-to-end worked example](examples/worked-example/README.md) |
 | [`poc/`](poc/README.md) | Browser proof of concept — a working MV3 extension implementing the rule-based engine tier |
+| [`spike/`](spike/README.md) | Throwaway feasibility spikes, clearly labelled as such — not reference implementations |
 | [`GLOSSARY.md`](GLOSSARY.md) | Normative vocabulary used across every document |
 
 ## Try it
