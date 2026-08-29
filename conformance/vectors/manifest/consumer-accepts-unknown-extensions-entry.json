@@ -1,0 +1,71 @@
+{
+  "id": "manifest/consumer-accepts-unknown-extensions-entry",
+  "area": "manifest",
+  "title": "An unrecognised extensions entry is ignored, not rejected",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lenspub-protocol.md",
+    "section": "7.1",
+    "text": "A Manifest Consumer ... MUST ignore unrecognized extensions entries without failing."
+  },
+  "role": "manifest-consumer",
+  "check": "manifest.validate",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Base Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      },
+      "extensions": {
+        "https://vendor.example/ns/unknown": {
+          "anything": [
+            1,
+            2,
+            3
+          ]
+        }
+      }
+    }
+  },
+  "expect": {
+    "accepted": true
+  }
+}

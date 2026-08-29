@@ -1,0 +1,25 @@
+{
+  "id": "adaptation/impact-presentation-change-is-at-least-trivial",
+  "area": "adaptation",
+  "title": "A change confined to the presentation block is at least trivial",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "4",
+    "text": "Trivial — presentation-only changes: changes confined to /interpretation/presentation.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "impact.classify",
+  "input": {
+    "change": {
+      "op": "replace",
+      "path": "/interpretation/presentation/summaries",
+      "before": "brief",
+      "after": "detailed"
+    }
+  },
+  "expect": {
+    "atLeast": "trivial"
+  }
+}

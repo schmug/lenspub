@@ -1,0 +1,34 @@
+{
+  "id": "anchoring/degrades-on-whitespace-drift",
+  "area": "anchoring",
+  "title": "Whitespace drift never yields exact; it degrades or goes unanchored",
+  "rationale": "Step 2 of the ladder makes fuzzy matching OPTIONAL, so both answers conform: an engine that attempts a whitespace-tolerant match reports degraded, and one that declines reports unanchored. What no engine may do is call this exact — the rendered text does not match the selector byte for byte, and claiming otherwise erases the marking a reader needs to distrust the placement.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-engine.md",
+    "section": "5.2",
+    "text": "If no selector resolves exactly, the engine MAY perform a fuzzy quote match within a bounded edit-distance budget. Fuzzy matching is OPTIONAL; if it is used, the anchor status MUST be degraded.",
+    "adr": "adr/0002-profile-web-annotation.md"
+  },
+  "role": "anchor-resolver",
+  "check": "anchor.resolve",
+  "input": {
+    "content": "The district   is piloting\n\tlocal-first\n software this term.",
+    "selector": {
+      "type": "TextQuoteSelector",
+      "exact": "local-first software",
+      "prefix": "is piloting ",
+      "suffix": " this term."
+    }
+  },
+  "expect": {
+    "status": [
+      "degraded",
+      "unanchored"
+    ],
+    "prohibitedStatus": [
+      "exact"
+    ],
+    "resolvedText": "local-first software"
+  }
+}

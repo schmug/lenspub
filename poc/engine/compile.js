@@ -12,6 +12,9 @@
 // This module is pure and DOM-free so it can be unit-tested in Node
 // (see ../test/run-tests.mjs).
 
+import { LENS_MANIFEST_SCHEMA } from './lens-manifest.schema.js';
+import { checkAgainstSchema } from './schema-check.js';
+
 /**
  * Presentation defaults, mirroring the `default` values declared in
  * ../../schemas/lens-manifest.schema.json (interpretation.presentation).
@@ -26,49 +29,31 @@ export const PRESENTATION_DEFAULTS = Object.freeze({
 });
 
 /**
- * PoC-level structural validation of a Lens Manifest.
+ * Validate a Lens Manifest against the normative schema.
  *
- * This is deliberately NOT full JSON Schema validation. It checks only the
- * required top-level structure (lenspub / type / metadata / interpretation /
- * adaptation) so that the popup's import flow can reject obviously wrong
- * files with a readable error. Conforming implementations SHOULD validate
- * against ../../schemas/lens-manifest.schema.json; the Node test suite does
- * exactly that with Ajv.
+ * The document is checked against the bundled normative schema
+ * (./lens-manifest.schema.js) by ./schema-check.js, which implements the subset
+ * of JSON Schema those schemas use — no Ajv, no build step, no runtime
+ * dependency. spec/lens-manifest.md Section 2 requires a conforming consumer to
+ * reject documents that fail schema validation, and
+ * security/privacy-model.md Section 2.1 depends on that specifically: the
+ * schema's `additionalProperties: false` constraints are what make a manifest
+ * carrying reading history mechanically detectable. A structural pre-check over
+ * a handful of required members would accept one.
+ *
+ * Not enforced, and deliberately: `format` (an annotation by default in JSON
+ * Schema 2020-12) and the normative requirements the schema cannot express at
+ * all, such as the referential integrity of Section 5 and the free-text half of
+ * the history-free rule. See conformance/README.md for what follows from that.
  *
  * @param {unknown} manifest - parsed JSON value to check.
  * @returns {{ ok: boolean, errors: string[] }}
  */
 export function validateManifestShape(manifest) {
-  const errors = [];
   if (manifest === null || typeof manifest !== 'object' || Array.isArray(manifest)) {
-    return { ok: false, errors: ['Manifest must be a JSON object.'] };
+    return { ok: false, errors: ['A Lens Manifest must be a JSON object.'] };
   }
-  if (manifest.lenspub !== '0.1') {
-    errors.push("Field 'lenspub' must be the string '0.1'.");
-  }
-  if (manifest.type !== 'LensManifest') {
-    errors.push("Field 'type' must be the string 'LensManifest'.");
-  }
-  const md = manifest.metadata;
-  if (!md || typeof md !== 'object' || Array.isArray(md)) {
-    errors.push("Required object field 'metadata' is missing.");
-  } else {
-    if (typeof md.name !== 'string' || md.name.length === 0) {
-      errors.push("'metadata.name' must be a non-empty string.");
-    }
-    if (typeof md.lensVersion !== 'string' || !/^\d+\.\d+\.\d+$/.test(md.lensVersion)) {
-      errors.push("'metadata.lensVersion' must be a semantic version such as '1.0.0'.");
-    }
-  }
-  if (!manifest.interpretation || typeof manifest.interpretation !== 'object' || Array.isArray(manifest.interpretation)) {
-    errors.push("Required object field 'interpretation' is missing.");
-  }
-  const ad = manifest.adaptation;
-  if (!ad || typeof ad !== 'object' || Array.isArray(ad)) {
-    errors.push("Required object field 'adaptation' is missing.");
-  } else if (typeof ad.defaultPolicy !== 'string') {
-    errors.push("'adaptation.defaultPolicy' is required (one of: locked, conservative, balanced, adaptive, explorer, custom).");
-  }
+  const errors = checkAgainstSchema(manifest, LENS_MANIFEST_SCHEMA);
   return { ok: errors.length === 0, errors };
 }
 

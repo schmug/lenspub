@@ -1,0 +1,811 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lenspub.org/ns/schemas/conformance-vector.schema.json",
+  "title": "LensPub Conformance Vector",
+  "description": "One declarative conformance test vector. Vectors are pure JSON so a runner in any language can consume them without porting JavaScript: `check` names the operation, `input` is the operation's argument, `expect` is the assertion. This schema is a suite artifact, not a protocol object \u2014 it is not one of the four normative schemas in /schemas, and it is versioned with the suite.",
+  "type": "object",
+  "required": [
+    "id",
+    "area",
+    "title",
+    "polarity",
+    "requirement",
+    "check",
+    "input",
+    "expect"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "description": "Stable vector identifier, '<area>/<slug>'. Reported verbatim; never reused for a different assertion.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*/[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "area": {
+      "description": "Coverage area from docs/roadmap.md Phase 1.",
+      "type": "string",
+      "enum": [
+        "manifest",
+        "anchoring",
+        "adaptation",
+        "privacy"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "rationale": {
+      "description": "Why this vector is the shape it is \u2014 in particular, for a negative vector, why the prohibited answer is a conformance violation rather than a quality difference.",
+      "type": "string"
+    },
+    "polarity": {
+      "description": "'positive' asserts an implementation does the required thing; 'negative' asserts it refuses the prohibited thing. An implementation that accepts everything must fail the negatives; one that refuses everything must fail the positives.",
+      "type": "string",
+      "enum": [
+        "positive",
+        "negative"
+      ]
+    },
+    "requirement": {
+      "description": "The normative sentence this vector mechanizes. Every vector traces to one.",
+      "type": "object",
+      "required": [
+        "document",
+        "section",
+        "text"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "document": {
+          "description": "Repository-relative path of the normative document.",
+          "type": "string"
+        },
+        "section": {
+          "description": "Section number or heading within that document.",
+          "type": "string"
+        },
+        "text": {
+          "description": "The requirement, quoted or closely paraphrased.",
+          "type": "string"
+        },
+        "adr": {
+          "description": "Repository-relative path of the governing ADR, where one exists.",
+          "type": "string"
+        }
+      }
+    },
+    "role": {
+      "description": "Adapter role required to run this vector. Absent means the vector needs no adapter (it asserts a property of a normative schema, which every implementation validates against). A vector whose role the adapter does not declare is SKIPPED, never passed.",
+      "type": "string",
+      "enum": [
+        "manifest-consumer",
+        "anchor-resolver",
+        "lens-engine",
+        "adaptation-engine",
+        "differ"
+      ]
+    },
+    "requiresTier": {
+      "description": "Capability tiers this vector applies to. Absent means every tier. An adapter at another tier SKIPS the vector \u2014 reduced richness at a lower tier is conforming (spec/lens-engine.md Section 4.1).",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "rule-based",
+          "local-model",
+          "hosted-model",
+          "hybrid"
+        ]
+      }
+    },
+    "check": {
+      "description": "The operation performed. Determines the shape of `input` and `expect`; see conformance/ADAPTER.md.",
+      "type": "string",
+      "enum": [
+        "schema.validate",
+        "manifest.validate",
+        "anchor.resolve",
+        "policy.resolve",
+        "impact.classify",
+        "proposal.disposition",
+        "interpret.result",
+        "diff.produce"
+      ]
+    },
+    "input": {
+      "type": "object"
+    },
+    "expect": {
+      "type": "object"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "check": {
+            "const": "schema.validate"
+          }
+        },
+        "required": [
+          "check"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "role"
+          ]
+        },
+        "properties": {
+          "input": {
+            "type": "object",
+            "required": [
+              "schema",
+              "document"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "LensManifest",
+                  "LensDiff",
+                  "InterpretationResult",
+                  "LensChangeProposal"
+                ]
+              },
+              "document": {
+                "type": "object"
+              }
+            }
+          },
+          "expect": {
+            "type": "object",
+            "required": [
+              "valid"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "valid": {
+                "type": "boolean"
+              },
+              "failsOn": {
+                "description": "Required when valid is false: the schema keyword the document must be rejected on. A counter-example that starts being rejected for a different reason is a schema that has stopped enforcing the invariant it was written to probe (CONTRIBUTING.md).",
+                "type": "object",
+                "required": [
+                  "keyword"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "keyword": {
+                    "type": "string"
+                  },
+                  "instancePath": {
+                    "description": "Exact RFC 6901 pointer the error must be reported at.",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "valid": {
+                  "const": false
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "valid",
+                "failsOn"
+              ]
+            }
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "role"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "check": {
+            "const": "manifest.validate"
+          }
+        },
+        "required": [
+          "check"
+        ]
+      },
+      "then": {
+        "properties": {
+          "input": {
+            "type": "object",
+            "required": [
+              "manifest"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "manifest": {}
+            }
+          },
+          "expect": {
+            "type": "object",
+            "required": [
+              "accepted"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "check": {
+            "const": "anchor.resolve"
+          }
+        },
+        "required": [
+          "check"
+        ]
+      },
+      "then": {
+        "properties": {
+          "input": {
+            "type": "object",
+            "required": [
+              "content",
+              "selector"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "content": {
+                "type": "string"
+              },
+              "selector": {
+                "type": "object"
+              }
+            }
+          },
+          "expect": {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "status": {
+                "description": "Permitted outcomes. An array where the specification leaves latitude \u2014 fuzzy matching is OPTIONAL (spec/lens-engine.md Section 5.2 step 2), so an engine that declines it and reports 'unanchored' conforms just as one that attempts it and reports 'degraded' does.",
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "exact",
+                      "degraded",
+                      "unanchored",
+                      "document"
+                    ]
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "exact",
+                        "degraded",
+                        "unanchored",
+                        "document"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "prohibitedStatus": {
+                "description": "Outcomes that are conformance violations, reported as such rather than as an ordinary mismatch.",
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "exact",
+                    "degraded",
+                    "unanchored",
+                    "document"
+                  ]
+                }
+              },
+              "resolvedOffsets": {
+                "description": "Required character offsets into `input.content` when the outcome is 'exact'. Vector content is ASCII so offsets are unambiguous across languages.",
+                "type": "object",
+                "required": [
+                  "start",
+                  "end"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "start": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "end": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "resolvedText": {
+                "description": "Text the resolved span must contain, compared with whitespace collapsed. Checked for 'exact' and 'degraded'.",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "check": {
+            "const": "policy.resolve"
+          }
+        },
+        "required": [
+          "check"
+        ]
+      },
+      "then": {
+        "properties": {
+          "input": {
+            "type": "object",
+            "required": [
+              "manifest"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "manifest": {
+                "type": "object"
+              },
+              "domains": {
+                "description": "Domain Scope ids the content classified into. Absent means no scope matched, so the lens-wide default governs. Two or more ids exercise the most-restrictive combination rule (spec/adaptation-model.md Section 6).",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "expect": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": false,
+            "properties": {
+              "proposalFrequency": {
+                "type": "number"
+              },
+              "evidenceThreshold": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "autoAcceptCeiling": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "trivial",
+                  "minor"
+                ]
+              },
+              "exploratoryProposalsPermitted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "check": {
+            "const": "impact.classify"
+          }
+        },
+        "required": [
+          "check"
+        ]
+      },
+      "then": {
+        "properties": {
+          "input": {
+            "type": "object",
+            "required": [
+              "change"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "change": {
+                "type": "object"
+              }
+            }
+          },
+          "expect": {
+            "type": "object",
+            "required": [
+              "atLeast"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "atLeast": {
+                "description": "Minimum impact. Engines MUST classify no lower than the rules of spec/adaptation-model.md Section 4 and MAY classify more severely, so over-classification passes and under-classification fails.",
+                "type": "string",
+                "enum": [
+                  "trivial",
+                  "minor",
+                  "major"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "check": {
+            "const": "proposal.disposition"
+          }
+        },
+        "required": [
+          "check"
+        ]
+      },
+      "then": {
+        "properties": {
+          "input": {
+            "type": "object",
+            "required": [
+              "policy",
+              "proposal"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "policy": {
+                "description": "The effective Adaptation Policy parameters already in force for the content's Domain Scope.",
+                "type": "object",
+                "required": [
+                  "proposalFrequency",
+                  "autoAcceptCeiling"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "proposalFrequency": {
+                    "type": "number"
+                  },
+                  "evidenceThreshold": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "autoAcceptCeiling": {
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "trivial",
+                      "minor"
+                    ]
+                  },
+                  "exploratoryProposalsPermitted": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "proposal": {
+                "type": "object",
+                "required": [
+                  "impact"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "impact": {
+                    "type": "string",
+                    "enum": [
+                      "trivial",
+                      "minor",
+                      "major"
+                    ]
+                  },
+                  "exploratory": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "origin": {
+                    "type": "string",
+                    "enum": [
+                      "user-feedback",
+                      "subscription-update"
+                    ],
+                    "default": "user-feedback"
+                  },
+                  "subscriptionTrust": {
+                    "type": "string",
+                    "enum": [
+                      "advisory",
+                      "adopted"
+                    ]
+                  },
+                  "evidenceCount": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "type": "object",
+            "required": [
+              "disposition"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "disposition": {
+                "description": "'auto-accept' applies the change without review (always notified and rollback-able); 'require-review' surfaces it for explicit human decision; 'must-not-raise' means the policy forbids raising the proposal at all.",
+                "type": "string",
+                "enum": [
+                  "auto-accept",
+                  "require-review",
+                  "must-not-raise"
+                ]
+              },
+              "conformanceViolationIf": {
+                "description": "Dispositions the specification names as conformance violations rather than as differences of quality. Reported distinctly from an ordinary mismatch.",
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "auto-accept",
+                    "require-review",
+                    "must-not-raise"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "check": {
+            "const": "interpret.result"
+          }
+        },
+        "required": [
+          "check"
+        ]
+      },
+      "then": {
+        "properties": {
+          "input": {
+            "type": "object",
+            "required": [
+              "manifest",
+              "content"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "manifest": {
+                "type": "object"
+              },
+              "content": {
+                "description": "Rendered content as the engine's host user agent would expose it (spec/lens-engine.md Section 3.1). Blocks are already-extracted text; the suite does not require a DOM.",
+                "type": "object",
+                "required": [
+                  "source",
+                  "blocks"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "source": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "blocks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "text"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "text": {
+                          "type": "string"
+                        },
+                        "tag": {
+                          "type": "string"
+                        },
+                        "linkCount": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "type": "object",
+            "required": [
+              "assertions"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "assertions": {
+                "description": "Assertions over the produced Interpretation Result, in addition to the unconditional protocol invariants the runner applies to every result (spec/lenspub-protocol.md Section 7.3).",
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "kind"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "annotation-kind-present",
+                        "annotation-kind-absent",
+                        "annotation-cites-pointer",
+                        "envelope-execution-location",
+                        "envelope-capability-tier-declared",
+                        "annotation-count-at-least",
+                        "envelope-model-declared"
+                      ]
+                    },
+                    "annotationKind": {
+                      "type": "string",
+                      "enum": [
+                        "annotation",
+                        "summary",
+                        "evidence-indicator",
+                        "counterpoint",
+                        "primary-source",
+                        "highlight"
+                      ]
+                    },
+                    "pointer": {
+                      "description": "RFC 6901 pointer that must appear in some annotation's manifestRefs.",
+                      "type": "string"
+                    },
+                    "equals": {
+                      "type": "string"
+                    },
+                    "min": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "note": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "check": {
+            "const": "diff.produce"
+          }
+        },
+        "required": [
+          "check"
+        ]
+      },
+      "then": {
+        "properties": {
+          "input": {
+            "type": "object",
+            "required": [
+              "from",
+              "to"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "from": {
+                "type": "object"
+              },
+              "to": {
+                "type": "object"
+              }
+            }
+          },
+          "expect": {
+            "type": "object",
+            "required": [
+              "refused"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "refused": {
+                "description": "true asserts the differ produced no diff at all. A differ that strips the offending field and diffs the remainder fails (spec/lens-diff.md Section 4, rule 2).",
+                "type": "boolean"
+              },
+              "schemaValid": {
+                "description": "Whether the produced diff must validate against schemas/lens-diff.schema.json.",
+                "type": "boolean"
+              },
+              "containsChange": {
+                "type": "object",
+                "required": [
+                  "path",
+                  "op"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "op": {
+                    "type": "string",
+                    "enum": [
+                      "add",
+                      "remove",
+                      "replace"
+                    ]
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "impactAtLeast": {
+                    "type": "string",
+                    "enum": [
+                      "trivial",
+                      "minor",
+                      "major"
+                    ]
+                  }
+                }
+              },
+              "changeCount": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

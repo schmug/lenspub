@@ -4,12 +4,16 @@
 // Run from anywhere:  node poc/test/run-tests.mjs
 //
 // Tests the pure engine modules (compile.js, interpret.js, anchor.js,
-// envelope.js) with plain asserts, then validates the produced
+// envelope.js, schema-check.js) with plain asserts, then validates the produced
 // InterpretationResult against schemas/interpretation-result.schema.json and
 // the bundled lens against schemas/lens-manifest.schema.json using Ajv.
+//
+// This suite tests THIS engine's internals. The specification-level suite any
+// engine can run is conformance/ (npm run conformance); it shares no code with
+// poc/engine/ by design.
 
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 
@@ -28,6 +32,8 @@ import {
   CONTEXT_LENGTH
 } from '../engine/anchor.js';
 import { buildEnvelope, ENGINE_ID, ENGINE_VERSION, CAPABILITY_TIER } from '../engine/envelope.js';
+import { checkAgainstSchema, unhandledKeywords } from '../engine/schema-check.js';
+import { LENS_MANIFEST_SCHEMA } from '../engine/lens-manifest.schema.js';
 
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 const lensPath = fileURLToPath(new URL('../lenses/avery-daily.json', import.meta.url));
@@ -140,6 +146,87 @@ test('validateManifestShape rejects non-manifests with readable errors', () => {
   assert.equal(validateManifestShape(null).ok, false);
   assert.equal(validateManifestShape([1, 2]).ok, false);
   assert.throws(() => compileManifest({}), /Invalid Lens Manifest/);
+});
+
+// ---------------------------------------------------------------------------
+// schema-check.js — the dependency-free consumer-side schema check
+// ---------------------------------------------------------------------------
+console.log('schema-check.js');
+
+test('bundled schema module is identical to the normative schema document', () => {
+  const canonical = JSON.parse(readFileSync(repoRoot + 'schemas/lens-manifest.schema.json', 'utf8'));
+  assert.equal(
+    JSON.stringify(LENS_MANIFEST_SCHEMA),
+    JSON.stringify(canonical),
+    'poc/engine/lens-manifest.schema.js has drifted from schemas/lens-manifest.schema.json; re-copy it'
+  );
+});
+
+test('the checker understands every keyword the manifest schema uses', () => {
+  assert.deepEqual(
+    unhandledKeywords(LENS_MANIFEST_SCHEMA),
+    [],
+    'the schema grew a constraint schema-check.js cannot see, so the consumer has quietly stopped enforcing it'
+  );
+});
+
+test('undeclared members are rejected wherever they appear', () => {
+  // The privacy invariant of ADR-0006 rests on this: a manifest carrying
+  // reading history is detectable only because every object closes itself.
+  const withHistory = { ...manifest, readingHistory: [{ url: 'https://example.com/a', readAt: '2026-07-08T09:14:00Z' }] };
+  const top = validateManifestShape(withHistory);
+  assert.equal(top.ok, false);
+  assert.match(top.errors.join(' '), /readingHistory/);
+  assert.match(top.errors.join(' '), /reading history would hide/);
+
+  const nested = JSON.parse(JSON.stringify(manifest));
+  nested.adaptation.feedbackEvents = [{ type: 'more-like-this', at: '2026-07-08T09:14:00Z' }];
+  const deep = validateManifestShape(nested);
+  assert.equal(deep.ok, false);
+  assert.match(deep.errors.join(' '), /\/adaptation has a field 'feedbackEvents'/);
+});
+
+test('enumerations, ranges, patterns, and types are enforced', () => {
+  const mutate = (fn) => {
+    const copy = JSON.parse(JSON.stringify(manifest));
+    fn(copy);
+    return validateManifestShape(copy);
+  };
+  assert.match(
+    mutate((m) => { m.adaptation.defaultPolicy = 'aggressive'; }).errors.join(' '),
+    /\/adaptation\/defaultPolicy must be one of: locked, conservative/
+  );
+  assert.match(
+    mutate((m) => { m.interpretation.priorities[0].weight = 1.5; }).errors.join(' '),
+    /\/interpretation\/priorities\/0\/weight must be at most 1/
+  );
+  assert.match(
+    mutate((m) => { m.metadata.lensVersion = '1.4'; }).errors.join(' '),
+    /\/metadata\/lensVersion must match/
+  );
+  assert.match(mutate((m) => { m.metadata.name = 42; }).errors.join(' '), /\/metadata\/name must be a string/);
+  assert.match(mutate((m) => { m.lenspub = '0.2'; }).errors.join(' '), /must be "0\.1"/);
+  assert.match(mutate((m) => { m.domains = 'health'; }).errors.join(' '), /\/domains must be an array/);
+});
+
+test('extensions and proof stay open objects', () => {
+  // The schema does not close them, so neither may the checker: a consumer
+  // MUST ignore unrecognized extensions entries without failing.
+  const open = JSON.parse(JSON.stringify(manifest));
+  open.extensions = { 'https://vendor.example/ns': { anything: [1, 2, 3] } };
+  open.proof = { type: 'DataIntegrityProof', cryptosuite: 'eddsa-jcs-2022' };
+  assert.equal(validateManifestShape(open).ok, true);
+});
+
+test('checkAgainstSchema resolves $ref into $defs', () => {
+  // sourceList, policyName and policyParameters all reach the document by $ref;
+  // an unresolved $ref would silently check nothing.
+  const bad = JSON.parse(JSON.stringify(manifest));
+  bad.interpretation.sources.trusted[0].weight = 5;      // $defs/sourceList
+  bad.adaptation.parameters = { evidenceThreshold: 0 };  // $defs/policyParameters
+  const errors = checkAgainstSchema(bad, LENS_MANIFEST_SCHEMA).join(' ');
+  assert.match(errors, /\/interpretation\/sources\/trusted\/0\/weight must be at most 1/);
+  assert.match(errors, /\/adaptation\/parameters\/evidenceThreshold must be at least 1/);
 });
 
 // ---------------------------------------------------------------------------
@@ -421,6 +508,43 @@ test('empty-page InterpretationResult validates (no blocks, no annotations excep
   const r3 = interpret({ url: 'https://example.org/empty', textBlocks: [] }, rules);
   const ok = validateResult(r3);
   assert.ok(ok, JSON.stringify(validateResult.errors, null, 2));
+});
+
+test('the dependency-free checker agrees with Ajv across the repository corpus', () => {
+  // The consumer-side check in schema-check.js is only worth having if it
+  // reaches the same verdict Ajv does. Anything the two disagree about is a
+  // manifest this engine would accept and the normative schema would not, or
+  // the reverse — either way a conformance defect, not a style difference.
+  const corpus = [
+    ...readdirSync(repoRoot + 'examples/manifests')
+      .filter((f) => f.endsWith('.json'))
+      .map((f) => [`examples/manifests/${f}`, JSON.parse(readFileSync(repoRoot + `examples/manifests/${f}`, 'utf8'))]),
+    ['poc/lenses/avery-daily.json', manifest],
+    ['examples/worked-example/lens.json', JSON.parse(readFileSync(repoRoot + 'examples/worked-example/lens.json', 'utf8'))]
+  ];
+  const mutations = [
+    ['undeclared top-level member', (m) => { m.readingHistory = [{ url: 'https://example.com/a' }]; }],
+    ['undeclared nested member', (m) => { m.metadata.lastReadExcerpt = 'a sentence from a page'; }],
+    ['policy outside the enumeration', (m) => { m.adaptation.defaultPolicy = 'aggressive'; }],
+    ['missing required block', (m) => { delete m.adaptation; }],
+    ['wrong protocol version', (m) => { m.lenspub = '0.2'; }],
+    ['weight out of range', (m) => { m.interpretation.priorities = [{ topic: 't', weight: 1.5 }]; }],
+    ['wrong type', (m) => { m.domains = 'health'; }]
+  ];
+  for (const [name, doc] of corpus) {
+    for (const [label, mutate] of [['unmodified', () => {}], ...mutations]) {
+      const copy = JSON.parse(JSON.stringify(doc));
+      mutate(copy);
+      const ajvOk = Boolean(validateManifest(copy));
+      const pocOk = validateManifestShape(copy).ok;
+      assert.equal(
+        pocOk,
+        ajvOk,
+        `${name} (${label}): Ajv says ${ajvOk ? 'valid' : 'invalid'}, schema-check.js says ` +
+          `${pocOk ? 'valid' : 'invalid'} — ${validateManifestShape(copy).errors.join('; ')}`
+      );
+    }
+  }
 });
 
 // ---------------------------------------------------------------------------

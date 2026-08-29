@@ -1,0 +1,27 @@
+{
+  "id": "manifest/consumer-rejects-missing-adaptation-block",
+  "area": "manifest",
+  "title": "A manifest with no adaptation block is rejected by the consumer",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-manifest.md",
+    "section": "2",
+    "text": "A conforming consumer MUST reject documents that fail schema validation."
+  },
+  "role": "manifest-consumer",
+  "check": "manifest.validate",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "No Adaptation",
+        "lensVersion": "1.0.0"
+      },
+      "interpretation": {}
+    }
+  },
+  "expect": {
+    "accepted": false
+  }
+}

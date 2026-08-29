@@ -1,0 +1,74 @@
+{
+  "id": "manifest/engine-honors-summaries-none",
+  "area": "manifest",
+  "title": "presentation.summaries of \"none\" suppresses summary annotations",
+  "rationale": "An engine that ignores presentation preferences and always summarises fails here. This is the cheapest available probe of \"honour the manifest you were given\" that does not depend on model-tier richness.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lenspub-protocol.md",
+    "section": "7.2",
+    "text": "rule-based — MUST honor source trust and distrust weighting, presentation preferences, and provenance surfacing that is detectable without a model."
+  },
+  "role": "lens-engine",
+  "check": "interpret.result",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Engine Lens",
+        "lensVersion": "1.0.0"
+      },
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example"
+            }
+          ]
+        },
+        "presentation": {
+          "summaries": "none"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "locked"
+      }
+    },
+    "content": {
+      "source": "https://example-journal.example/articles/district-devices",
+      "title": "School districts weigh where student data lives",
+      "blocks": [
+        {
+          "text": "The district is piloting local-first software that keeps student records on classroom machines rather than in a vendor cloud.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "An internal review found that 73 percent of teacher laptops were missing critical updates at the start of the school year.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "A state audit published in 2024 found gaps in vendor contracts, with 40 districts affected according to the published report.",
+          "tag": "p",
+          "linkCount": 2
+        }
+      ]
+    }
+  },
+  "expect": {
+    "assertions": [
+      {
+        "kind": "annotation-kind-absent",
+        "annotationKind": "summary"
+      }
+    ]
+  }
+}

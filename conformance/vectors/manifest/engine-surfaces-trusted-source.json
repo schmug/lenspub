@@ -1,0 +1,83 @@
+{
+  "id": "manifest/engine-surfaces-trusted-source",
+  "area": "manifest",
+  "title": "Content from a trusted origin is visibly indicated, citing the source entry",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lens-engine.md",
+    "section": "4.2",
+    "text": "Content and links originating from origins, registrable domains, or publisher DIDs listed in interpretation.sources.trusted and interpretation.sources.distrusted MUST be visibly indicated, with the user’s note carried into the Reasoning Trace."
+  },
+  "role": "lens-engine",
+  "check": "interpret.result",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Engine Lens",
+        "lensVersion": "1.0.0"
+      },
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "locked"
+      }
+    },
+    "content": {
+      "source": "https://example-journal.example/articles/district-devices",
+      "title": "School districts weigh where student data lives",
+      "blocks": [
+        {
+          "text": "The district is piloting local-first software that keeps student records on classroom machines rather than in a vendor cloud.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "An internal review found that 73 percent of teacher laptops were missing critical updates at the start of the school year.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "A state audit published in 2024 found gaps in vendor contracts, with 40 districts affected according to the published report.",
+          "tag": "p",
+          "linkCount": 2
+        }
+      ]
+    }
+  },
+  "expect": {
+    "assertions": [
+      {
+        "kind": "annotation-cites-pointer",
+        "pointer": "/interpretation/sources/trusted/0"
+      },
+      {
+        "kind": "annotation-kind-present",
+        "annotationKind": "evidence-indicator",
+        "min": 1
+      }
+    ]
+  }
+}

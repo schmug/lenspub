@@ -1,0 +1,58 @@
+{
+  "id": "privacy/reject-version-history-carrying-read-urls",
+  "area": "privacy",
+  "title": "A versionHistory entry carrying reading history is rejected",
+  "rationale": "versionHistory travels with the shareable core and grows on every accepted proposal, which makes it the most inviting place to attach \"what I was reading when I changed this\".",
+  "polarity": "negative",
+  "requirement": {
+    "document": "security/privacy-model.md",
+    "section": "2.1",
+    "text": "versionHistory itself contains only version identifiers, hashes, dates, and proposal identifiers, never reading history.",
+    "adr": "adr/0006-history-free-shareable-core.md"
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Privacy Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      },
+      "versionHistory": [
+        {
+          "lensVersion": "1.0.0",
+          "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "readUrls": [
+            "https://example-journal.example/articles/district-devices"
+          ]
+        }
+      ]
+    }
+  },
+  "expect": {
+    "valid": false,
+    "failsOn": {
+      "keyword": "additionalProperties",
+      "instancePath": "/versionHistory/0"
+    }
+  }
+}

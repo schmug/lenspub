@@ -1,0 +1,36 @@
+{
+  "id": "adaptation/locked-policy-raises-no-proposal",
+  "area": "adaptation",
+  "title": "Under locked, a feedback-driven proposal is not raised at all",
+  "rationale": "Both other dispositions are violations here, for different reasons: auto-accept changes the lens the user locked, and require-review raises a proposal locked promised never to raise. Subscription updates are the documented exception and are covered separately.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "5",
+    "text": "Under locked, no proposal is ever raised, so the evidence threshold has no effect.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "proposal.disposition",
+  "input": {
+    "policy": {
+      "name": "locked",
+      "proposalFrequency": 0,
+      "autoAcceptCeiling": "none",
+      "exploratoryProposalsPermitted": false
+    },
+    "proposal": {
+      "impact": "trivial",
+      "exploratory": false,
+      "origin": "user-feedback",
+      "evidenceCount": 40
+    }
+  },
+  "expect": {
+    "disposition": "must-not-raise",
+    "conformanceViolationIf": [
+      "auto-accept",
+      "require-review"
+    ]
+  }
+}

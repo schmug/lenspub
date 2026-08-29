@@ -1,0 +1,29 @@
+{
+  "id": "anchoring/exact-without-context-members",
+  "area": "anchoring",
+  "title": "A quote with no prefix or suffix still resolves exactly when it is unique",
+  "rationale": "prefix and suffix are SHOULD, not MUST. An engine that requires them in order to anchor would reject conforming annotations produced by another engine.",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lens-engine.md",
+    "section": "5.1",
+    "text": "Wherever the annotation target is text, the engine MUST produce a TextQuoteSelector ...; its prefix and suffix SHOULD be populated to disambiguate repeated text.",
+    "adr": "adr/0002-profile-web-annotation.md"
+  },
+  "role": "anchor-resolver",
+  "check": "anchor.resolve",
+  "input": {
+    "content": "The district is piloting local-first software this term.",
+    "selector": {
+      "type": "TextQuoteSelector",
+      "exact": "local-first software"
+    }
+  },
+  "expect": {
+    "status": "exact",
+    "resolvedOffsets": {
+      "start": 25,
+      "end": 45
+    }
+  }
+}

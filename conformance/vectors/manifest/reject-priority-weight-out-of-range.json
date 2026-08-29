@@ -1,0 +1,51 @@
+{
+  "id": "manifest/reject-priority-weight-out-of-range",
+  "area": "manifest",
+  "title": "A priority weight outside [-1, 1] is rejected",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-manifest.md",
+    "section": "2",
+    "text": "The schema is normative for structure — field names, types, enumerations, required properties."
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Base Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 1.5
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      }
+    }
+  },
+  "expect": {
+    "valid": false,
+    "failsOn": {
+      "keyword": "maximum",
+      "instancePath": "/interpretation/priorities/0/weight"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "id": "adaptation/impact-adaptation-change-is-major",
+  "area": "adaptation",
+  "title": "Any change under /adaptation is major regardless of how small the edit is",
+  "rationale": "Under-classifying this one lets a proposal raise the ceiling that governs proposals.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "4",
+    "text": "Two blocks are always major regardless of the size of the edit: /privacy and /adaptation.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "impact.classify",
+  "input": {
+    "change": {
+      "op": "replace",
+      "path": "/adaptation/defaultPolicy",
+      "before": "balanced",
+      "after": "explorer"
+    }
+  },
+  "expect": {
+    "atLeast": "major"
+  }
+}

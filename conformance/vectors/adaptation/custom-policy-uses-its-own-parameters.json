@@ -1,0 +1,50 @@
+{
+  "id": "adaptation/custom-policy-uses-its-own-parameters",
+  "area": "adaptation",
+  "title": "A custom policy resolves to its declared parameters and permits no exploratory proposals",
+  "rationale": "Exploratory permission is the one parameter a custom policy cannot reach: the v0.1 parameter set has no field granting it, so a custom policy is never exploratory however permissive its other three values are.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "5",
+    "text": "Exploratory proposals ... are permitted only under the explorer preset; the v0.1 parameter set has no field granting exploratory permission to a custom policy.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "policy.resolve",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Adaptation Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {},
+      "adaptation": {
+        "defaultPolicy": "custom",
+        "parameters": {
+          "proposalFrequency": 7,
+          "evidenceThreshold": 1,
+          "autoAcceptCeiling": "minor"
+        }
+      }
+    }
+  },
+  "expect": {
+    "proposalFrequency": 7,
+    "evidenceThreshold": 1,
+    "autoAcceptCeiling": "minor",
+    "exploratoryProposalsPermitted": false
+  }
+}

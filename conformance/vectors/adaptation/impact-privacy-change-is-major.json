@@ -1,0 +1,26 @@
+{
+  "id": "adaptation/impact-privacy-change-is-major",
+  "area": "adaptation",
+  "title": "Any change under /privacy is major regardless of how small the edit is",
+  "rationale": "A single boolean flip. Sized by the diff it is the smallest change the manifest can carry, and an engine that classifies by size will call it trivial — which under an adaptive or explorer ceiling would auto-accept the user into remote inference without review.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "4",
+    "text": "Two blocks are always major regardless of the size of the edit: /privacy and /adaptation.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "impact.classify",
+  "input": {
+    "change": {
+      "op": "replace",
+      "path": "/privacy/remoteInference/allowed",
+      "before": false,
+      "after": true
+    }
+  },
+  "expect": {
+    "atLeast": "major"
+  }
+}

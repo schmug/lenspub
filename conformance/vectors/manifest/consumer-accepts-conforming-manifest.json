@@ -1,0 +1,63 @@
+{
+  "id": "manifest/consumer-accepts-conforming-manifest",
+  "area": "manifest",
+  "title": "A conforming manifest is accepted",
+  "rationale": "The counterweight to every negative consumer vector. An implementation that refuses everything would otherwise pass the whole negative set; this vector and consumer-accepts-unknown-extensions-entry are what make refusing everything fail.",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lenspub-protocol.md",
+    "section": "7.1",
+    "text": "Every engine ... MUST accept any valid manifest without error."
+  },
+  "role": "manifest-consumer",
+  "check": "manifest.validate",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Base Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      }
+    }
+  },
+  "expect": {
+    "accepted": true
+  }
+}

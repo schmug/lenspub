@@ -1,0 +1,31 @@
+{
+  "id": "manifest/valid-minimal-document",
+  "area": "manifest",
+  "title": "A manifest carrying only the required members is a conforming Lens Manifest",
+  "rationale": "Fixes the floor of the \"conforming Lens Manifest\" target. Everything above the five required members is optional, and a suite that only ever validated rich manifests would not notice a schema that had started demanding one of them.",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lens-manifest.md",
+    "section": "2",
+    "text": "A conforming Lens Manifest is a JSON document that validates against schemas/lens-manifest.schema.json and satisfies every normative requirement of this document."
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Minimal Conformance Lens",
+        "lensVersion": "1.0.0"
+      },
+      "interpretation": {},
+      "adaptation": {
+        "defaultPolicy": "locked"
+      }
+    }
+  },
+  "expect": {
+    "valid": true
+  }
+}

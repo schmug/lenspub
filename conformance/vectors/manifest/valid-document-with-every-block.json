@@ -1,0 +1,86 @@
+{
+  "id": "manifest/valid-document-with-every-block",
+  "area": "manifest",
+  "title": "A manifest exercising every optional block is a conforming Lens Manifest",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lens-manifest.md",
+    "section": "2",
+    "text": "A conforming Lens Manifest is a JSON document that validates against schemas/lens-manifest.schema.json."
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Base Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      },
+      "id": "https://lenses.example/conformance-base",
+      "privacy": {
+        "remoteInference": {
+          "allowed": false
+        }
+      },
+      "subscriptions": [
+        {
+          "lens": "https://lenses.example/expert-medical",
+          "trust": "advisory"
+        }
+      ],
+      "versionHistory": [
+        {
+          "lensVersion": "1.0.0",
+          "hash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+          "date": "2026-07-09T00:00:00Z"
+        }
+      ],
+      "extensions": {
+        "https://vendor.example/ns": {
+          "renderHint": "compact"
+        }
+      }
+    }
+  },
+  "expect": {
+    "valid": true
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "privacy/differ-refuses-input-with-an-undeclared-field",
+  "area": "privacy",
+  "title": "A differ refuses an input carrying a field outside the manifest schema, producing no diff",
+  "rationale": "Stripping the offending member and diffing the remainder looks like tolerance and is the failure mode the rule was written against: an unrecognised field is exactly where history-derived data would hide, and a differ that reads past it becomes the component that renders that data into summaries and review screens. The vector therefore asserts that no diff is produced at all — a diff that merely omits the field is a fail, not a partial pass.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-diff.md",
+    "section": "4",
+    "text": "A differ MUST refuse — with an error, producing no Lens Diff — any input containing fields not defined by that schema. It MUST NOT skip, strip, or silently ignore unrecognized fields and diff the remainder.",
+    "adr": "adr/0006-history-free-shareable-core.md"
+  },
+  "role": "differ",
+  "check": "diff.produce",
+  "input": {
+    "from": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Diff Base Lens",
+        "lensVersion": "1.0.0"
+      },
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.4
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      }
+    },
+    "to": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Diff Base Lens",
+        "lensVersion": "1.1.0"
+      },
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.6
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      },
+      "readingHistory": [
+        {
+          "url": "https://example-journal.example/articles/district-devices",
+          "readAt": "2026-07-08T09:14:00Z"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "refused": true
+  }
+}

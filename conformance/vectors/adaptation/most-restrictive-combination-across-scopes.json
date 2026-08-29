@@ -1,0 +1,59 @@
+{
+  "id": "adaptation/most-restrictive-combination-across-scopes",
+  "area": "adaptation",
+  "title": "Content in two scopes with differing policies takes the most restrictive value of each parameter",
+  "rationale": "The parameters are combined independently, not by choosing whichever single policy looks stricter overall. Health (conservative) supplies the lowest frequency and the highest threshold; technology (explorer) supplies neither. An engine that picks one policy wholesale gets the frequency right by luck and the exploratory permission wrong.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "6",
+    "text": "When content falls into multiple scopes whose policies differ, or classification is too uncertain to be stated honestly, the engine MUST apply the most restrictive combination parameter-wise: the lowest applicable proposalFrequency, the highest applicable evidenceThreshold, and the lowest applicable autoAcceptCeiling (none < trivial < minor).",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "policy.resolve",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Adaptation Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {},
+      "adaptation": {
+        "defaultPolicy": "balanced",
+        "domainPolicies": [
+          {
+            "domain": "health",
+            "policy": "conservative"
+          },
+          {
+            "domain": "technology",
+            "policy": "explorer"
+          }
+        ]
+      }
+    },
+    "domains": [
+      "health",
+      "technology"
+    ]
+  },
+  "expect": {
+    "proposalFrequency": 0.25,
+    "evidenceThreshold": 12,
+    "autoAcceptCeiling": "none",
+    "exploratoryProposalsPermitted": false
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "id": "adaptation/preset-locked-parameters",
+  "area": "adaptation",
+  "title": "The locked preset resolves to its normative parameter values",
+  "rationale": "Under locked the evidence threshold has no effect, so this vector asserts nothing about it: no proposal is ever raised for a threshold to gate.",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "5",
+    "text": "The five preset names — serialized in lowercase per the manifest schema — have the following normative values. locked: proposalFrequency 0, evidenceThreshold n/a, autoAcceptCeiling none, exploratory proposals not permitted.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "policy.resolve",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Adaptation Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {},
+      "adaptation": {
+        "defaultPolicy": "locked"
+      }
+    }
+  },
+  "expect": {
+    "proposalFrequency": 0,
+    "autoAcceptCeiling": "none",
+    "exploratoryProposalsPermitted": false
+  }
+}

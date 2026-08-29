@@ -1,0 +1,83 @@
+{
+  "id": "manifest/model-tier-records-model-in-envelope",
+  "area": "manifest",
+  "title": "A model-backed engine records the model it used in the Reproducibility Envelope",
+  "rationale": "Deliberately scoped to the model tiers. It is the suite’s demonstration that a vector outside the adapter’s declared tier reports SKIPPED and never PASSED: a rule-based engine has no model to record, and crediting it with this requirement would misstate what it was tested for.",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lenspub-protocol.md",
+    "section": "7.2",
+    "text": "The envelope’s model member is REQUIRED whenever a model is used, with weight hashes recorded where obtainable.",
+    "adr": "adr/0004-reproducibility-envelope.md"
+  },
+  "role": "lens-engine",
+  "requiresTier": [
+    "local-model",
+    "hosted-model"
+  ],
+  "check": "interpret.result",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Engine Lens",
+        "lensVersion": "1.0.0"
+      },
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "locked"
+      }
+    },
+    "content": {
+      "source": "https://example-journal.example/articles/district-devices",
+      "title": "School districts weigh where student data lives",
+      "blocks": [
+        {
+          "text": "The district is piloting local-first software that keeps student records on classroom machines rather than in a vendor cloud.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "An internal review found that 73 percent of teacher laptops were missing critical updates at the start of the school year.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "A state audit published in 2024 found gaps in vendor contracts, with 40 districts affected according to the published report.",
+          "tag": "p",
+          "linkCount": 2
+        }
+      ]
+    }
+  },
+  "expect": {
+    "assertions": [
+      {
+        "kind": "envelope-model-declared"
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "anchoring/exact-when-quote-present-verbatim",
+  "area": "anchoring",
+  "title": "A quote present verbatim resolves with status exact",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lens-engine.md",
+    "section": "5.2",
+    "text": "An anchor resolved to a location whose content matches the TextQuoteSelector.exact text (where the target is text) has status exact.",
+    "adr": "adr/0002-profile-web-annotation.md"
+  },
+  "role": "anchor-resolver",
+  "check": "anchor.resolve",
+  "input": {
+    "content": "The district is piloting local-first software this term.",
+    "selector": {
+      "type": "TextQuoteSelector",
+      "exact": "local-first software",
+      "prefix": "is piloting ",
+      "suffix": " this term."
+    }
+  },
+  "expect": {
+    "status": "exact",
+    "resolvedOffsets": {
+      "start": 25,
+      "end": 45
+    },
+    "resolvedText": "local-first software"
+  }
+}

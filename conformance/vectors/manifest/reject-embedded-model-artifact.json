@@ -1,0 +1,72 @@
+{
+  "id": "manifest/reject-embedded-model-artifact",
+  "area": "manifest",
+  "title": "A manifest carrying model weights or an adapter is rejected",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-manifest.md",
+    "section": "1",
+    "text": "A Lens Manifest MUST NOT contain model weights, adapters, fine-tunes, embeddings, or any other model artifact.",
+    "adr": "adr/0001-manifest-is-declarative-policy.md"
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Base Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      },
+      "modelAdapter": {
+        "format": "lora",
+        "base": "example-7b",
+        "tensors": "base64:AAAA"
+      }
+    }
+  },
+  "expect": {
+    "valid": false,
+    "failsOn": {
+      "keyword": "additionalProperties",
+      "instancePath": ""
+    }
+  }
+}

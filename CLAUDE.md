@@ -10,14 +10,25 @@ Read `constitution/DESIGN_HANDOFF.md` first; every other document derives from i
 ## Commands
 
 ```
-npm install            # once; Ajv devDependencies, needed by the three scripts below
+npm install            # once; Ajv devDependencies, needed by the scripts below
 npm test               # poc/test/run-tests.mjs — engine unit tests + Ajv validation
 npm run validate       # scripts/validate-examples.mjs — every JSON example vs its schema
 npm run check-links    # scripts/check-links.mjs — every Markdown cross-reference resolves
+npm run conformance    # conformance/run.mjs — the protocol suite, vs the PoC adapter
+npm run conformance:self-test   # the conformance suite's own tests
 ```
 
-All three run in CI (`.github/workflows/ci.yml`) on Node 18 and 22. The browser
-extension in `poc/` has no build step and no runtime dependencies.
+The first three run in CI (`.github/workflows/ci.yml`) on Node 18 and 22; the
+conformance scripts are not wired into CI yet.
+
+`npm test` and `npm run conformance` answer different questions and must not be
+merged. The first tests *this engine's* internals; the second tests *the
+protocol*, and `conformance/` imports nothing from `poc/engine/` by design — a
+suite sharing code with an engine checks that two copies agree, not that either
+conforms. An engine reaches it through one adapter (`conformance/ADAPTER.md`);
+the PoC's lives at `poc/conformance-adapter.mjs`, not under `conformance/`.
+
+The browser extension in `poc/` has no build step and no runtime dependencies.
 
 ## The gate that catches people out
 
@@ -81,6 +92,6 @@ touches them is substantive errata, not a fix.
 - `spike/` is throwaway demonstration code, clearly labelled. It is not the
   reference implementation and does not need to be conformant — but say so where
   it is not.
-- Cross-references are load-bearing (663 of them). `npm run check-links` is the
+- Cross-references are load-bearing (726 of them). `npm run check-links` is the
   Phase 0 exit criterion "every cross-reference resolves", so run it after moving
   or renaming any document.

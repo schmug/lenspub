@@ -5,9 +5,9 @@
 // Shows the active Lens Manifest (name, lensVersion, adaptation
 // defaultPolicy), per-tab annotation counts by kind, and the execution
 // location badge from the Reproducibility Envelope. Provides read-only
-// manifest inspection, import (with PoC-level structural validation — see
-// validateManifestShape in ../engine/compile.js; full JSON Schema validation
-// is exercised by the Node test suite), export as a JSON download, and a
+// manifest inspection, import (validated against the bundled normative schema
+// by validateManifestShape in ../engine/compile.js), export as a JSON
+// download, and a
 // shortcut to the bundled demo page. All DOM updates use textContent; no
 // innerHTML anywhere.
 

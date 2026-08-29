@@ -1,0 +1,27 @@
+{
+  "id": "adaptation/impact-removal-is-major",
+  "area": "adaptation",
+  "title": "A removal is major whatever it removes",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "4",
+    "text": "Major — everything else. This includes, without limitation ... every removal (op of remove).",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "impact.classify",
+  "input": {
+    "change": {
+      "op": "remove",
+      "path": "/interpretation/priorities/2",
+      "before": {
+        "topic": "vendor lock-in",
+        "weight": 0.6
+      }
+    }
+  },
+  "expect": {
+    "atLeast": "major"
+  }
+}
