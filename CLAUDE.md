@@ -81,6 +81,6 @@ touches them is substantive errata, not a fix.
 - `spike/` is throwaway demonstration code, clearly labelled. It is not the
   reference implementation and does not need to be conformant — but say so where
   it is not.
-- Cross-references are load-bearing (647 of them). `npm run check-links` is the
+- Cross-references are load-bearing (663 of them). `npm run check-links` is the
   Phase 0 exit criterion "every cross-reference resolves", so run it after moving
   or renaming any document.

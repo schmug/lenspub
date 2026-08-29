@@ -1,0 +1,30 @@
+{
+  "lenspub": "0.1",
+  "type": "LensChangeProposal",
+  "id": "lcp-2026-07-09-903",
+  "baseVersion": {
+    "lensVersion": "1.4.2",
+    "hash": "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"
+  },
+  "changes": [
+    {
+      "op": "replace",
+      "path": "/interpretation/priorities/1/weight",
+      "before": 0.7,
+      "after": 0.9,
+      "category": "priorities",
+      "impact": "minor",
+      "summary": "Raises the emphasis on topic 'reproducible benchmarks' from 0.7 to 0.9."
+    }
+  ],
+  "evidenceSummary": {
+    "supportingEvents": [
+      { "eventType": "approve-annotation", "domainScope": "technical-research", "count": 2 }
+    ],
+    "events": [
+      { "eventType": "approve-annotation", "annotationId": "ann-4471" },
+      { "eventType": "approve-annotation", "annotationId": "ann-4488" }
+    ]
+  },
+  "impact": "minor"
+}
