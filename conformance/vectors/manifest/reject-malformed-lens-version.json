@@ -1,0 +1,66 @@
+{
+  "id": "manifest/reject-malformed-lens-version",
+  "area": "manifest",
+  "title": "A lensVersion that is not a semantic version is rejected",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-manifest.md",
+    "section": "2",
+    "text": "The schema is normative for structure — field names, types, enumerations, required properties."
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Bad Version",
+        "lensVersion": "1.4"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      }
+    }
+  },
+  "expect": {
+    "valid": false,
+    "failsOn": {
+      "keyword": "pattern",
+      "instancePath": "/metadata/lensVersion"
+    }
+  }
+}

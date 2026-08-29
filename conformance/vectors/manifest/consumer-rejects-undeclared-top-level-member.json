@@ -1,0 +1,67 @@
+{
+  "id": "manifest/consumer-rejects-undeclared-top-level-member",
+  "area": "manifest",
+  "title": "A manifest with a member the schema does not define is rejected by the consumer",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-manifest.md",
+    "section": "2",
+    "text": "A conforming consumer MUST reject documents that fail schema validation."
+  },
+  "role": "manifest-consumer",
+  "check": "manifest.validate",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Base Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      },
+      "readingProfile": {
+        "favouriteOutlets": [
+          "example-journal.example"
+        ]
+      }
+    }
+  },
+  "expect": {
+    "accepted": false
+  }
+}

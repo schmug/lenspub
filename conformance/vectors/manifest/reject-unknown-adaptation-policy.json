@@ -1,0 +1,67 @@
+{
+  "id": "manifest/reject-unknown-adaptation-policy",
+  "area": "manifest",
+  "title": "A manifest naming an Adaptation Policy outside the enumeration is rejected",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "5",
+    "text": "The five preset names — serialized in lowercase per the manifest schema — have the following normative values.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Base Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "aggressive"
+      }
+    }
+  },
+  "expect": {
+    "valid": false,
+    "failsOn": {
+      "keyword": "enum",
+      "instancePath": "/adaptation/defaultPolicy"
+    }
+  }
+}

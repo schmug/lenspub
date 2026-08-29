@@ -1,0 +1,72 @@
+{
+  "id": "privacy/no-remote-execution-without-an-opted-in-scope",
+  "area": "privacy",
+  "title": "remoteInference allowed with no opted-in scopes still means local execution",
+  "rationale": "The trap is reading allowed: true as the authorisation. It is not — the scope list is. An empty list opts nothing in, so an engine that crosses the trust boundary here has sent the user’s reading to a provider on the strength of a flag that authorised no scope at all. The runner additionally enforces, on every result in the suite, that a remote execution names an optInScope the manifest actually opted in.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "schemas/lens-manifest.schema.json",
+    "section": "privacy.remoteInference.domains",
+    "text": "Domain Scope ids for which remote inference is permitted. Empty or absent with allowed=true means no scopes are opted in.",
+    "adr": "adr/0005-local-only-default.md"
+  },
+  "role": "lens-engine",
+  "check": "interpret.result",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Privacy Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "locked"
+      },
+      "privacy": {
+        "remoteInference": {
+          "allowed": true,
+          "domains": []
+        }
+      }
+    },
+    "content": {
+      "source": "https://example-journal.example/articles/district-devices",
+      "title": "School districts weigh where student data lives",
+      "blocks": [
+        {
+          "text": "The district is piloting local-first software that keeps student records on classroom machines rather than in a vendor cloud.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "An internal review found that 73 percent of teacher laptops were missing critical updates at the start of the school year.",
+          "tag": "p",
+          "linkCount": 0
+        }
+      ]
+    }
+  },
+  "expect": {
+    "assertions": [
+      {
+        "kind": "envelope-execution-location",
+        "equals": "local"
+      }
+    ]
+  }
+}

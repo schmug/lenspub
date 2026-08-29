@@ -1,0 +1,28 @@
+{
+  "id": "adaptation/impact-adopted-subscription-is-major",
+  "area": "adaptation",
+  "title": "Adding a subscription with adopted trust is major",
+  "rationale": "The advisory case is explicitly minor, so this is the one place a subscription addition changes class on a single enum member.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "4",
+    "text": "Major — everything else. This includes, without limitation ... subscriptions with trust set to adopted (adding one, or changing an existing subscription’s trust to adopted).",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "impact.classify",
+  "input": {
+    "change": {
+      "op": "add",
+      "path": "/subscriptions/1",
+      "after": {
+        "lens": "https://lenses.example/expert-medical",
+        "trust": "adopted"
+      }
+    }
+  },
+  "expect": {
+    "atLeast": "major"
+  }
+}

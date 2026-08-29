@@ -1,0 +1,33 @@
+{
+  "id": "anchoring/no-exact-on-near-miss-quote",
+  "area": "anchoring",
+  "title": "A near-miss quote does not resolve exactly onto the passage it resembles",
+  "rationale": "The content says 41 percent; the selector says 73 percent. A degraded answer conforms — the near miss is within a plausible edit-distance budget and the marking tells the reader the placement is approximate. An exact answer asserts the page says something it does not, at the one kind of claim (a number) where the difference matters most.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-engine.md",
+    "section": "5.2",
+    "text": "An engine MUST NOT guess-anchor silently: displaying an annotation at a location the selectors did not verifiably identify, without a degraded or unanchored marking, is a conformance violation.",
+    "adr": "adr/0002-profile-web-annotation.md"
+  },
+  "role": "anchor-resolver",
+  "check": "anchor.resolve",
+  "input": {
+    "content": "An internal review found that 41 percent of teacher laptops were missing critical updates.",
+    "selector": {
+      "type": "TextQuoteSelector",
+      "exact": "73 percent of teacher laptops",
+      "prefix": "found that ",
+      "suffix": " were missing"
+    }
+  },
+  "expect": {
+    "status": [
+      "degraded",
+      "unanchored"
+    ],
+    "prohibitedStatus": [
+      "exact"
+    ]
+  }
+}

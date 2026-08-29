@@ -1,0 +1,56 @@
+{
+  "id": "privacy/reject-manifest-carrying-feedback-records",
+  "area": "privacy",
+  "title": "A manifest carrying individual feedback events is rejected",
+  "rationale": "Feedback records are Adaptation State — private and device-local. This is the vector that separates the shareable core from the state that drives it: the bridge between them is an accepted proposal, never a copied array.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "security/privacy-model.md",
+    "section": "2.1",
+    "text": "Feedback records or their aggregates at any granularity finer than the declarative preference they produced.",
+    "adr": "adr/0006-history-free-shareable-core.md"
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Privacy Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced",
+        "feedbackEvents": [
+          {
+            "type": "more-like-this",
+            "topic": "local-first software",
+            "at": "2026-07-08T09:14:00Z"
+          }
+        ]
+      }
+    }
+  },
+  "expect": {
+    "valid": false,
+    "failsOn": {
+      "keyword": "additionalProperties",
+      "instancePath": "/adaptation"
+    }
+  }
+}

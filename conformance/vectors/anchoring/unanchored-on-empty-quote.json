@@ -1,0 +1,31 @@
+{
+  "id": "anchoring/unanchored-on-empty-quote",
+  "area": "anchoring",
+  "title": "A selector with no quote text resolves unanchored",
+  "rationale": "A zero-length needle matches at every offset in every string. An engine that reports exact here will report exact for anything.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-engine.md",
+    "section": "5.2",
+    "text": "Failing that, the engine MUST present the annotation unanchored at document level ... with status unanchored. Annotations MUST NOT be silently discarded because anchoring failed.",
+    "adr": "adr/0002-profile-web-annotation.md"
+  },
+  "role": "anchor-resolver",
+  "check": "anchor.resolve",
+  "input": {
+    "content": "The district is piloting local-first software this term.",
+    "selector": {
+      "type": "TextQuoteSelector",
+      "exact": "",
+      "prefix": "",
+      "suffix": ""
+    }
+  },
+  "expect": {
+    "status": "unanchored",
+    "prohibitedStatus": [
+      "exact",
+      "degraded"
+    ]
+  }
+}

@@ -38,6 +38,7 @@ New here? Read these in order:
 | [`schemas/`](schemas/) | Normative JSON Schemas: [Lens Manifest](schemas/lens-manifest.schema.json) · [Lens Diff](schemas/lens-diff.schema.json) · [Interpretation Result](schemas/interpretation-result.schema.json) · [Lens Change Proposal](schemas/lens-change-proposal.schema.json) |
 | [`examples/`](examples/) | Five example manifests, an example diff, an example Lens Change Proposal with counter-examples that must fail validation, and the [end-to-end worked example](examples/worked-example/README.md) |
 | [`poc/`](poc/README.md) | Browser proof of concept — a working MV3 extension implementing the rule-based engine tier |
+| [`conformance/`](conformance/README.md) | The v0.1 conformance suite — 61 declarative vectors any Lens Engine can run, and [one adapter interface](conformance/ADAPTER.md) to reach them through |
 | [`spike/`](spike/README.md) | Throwaway feasibility spikes, clearly labelled as such — not reference implementations |
 | [`GLOSSARY.md`](GLOSSARY.md) | Normative vocabulary used across every document |
 
@@ -52,6 +53,8 @@ npm install
 ```
 
 Then validate every JSON example against the schemas with `npm run validate`, check that every cross-reference in the documentation resolves with `npm run check-links`, and run the engine unit tests with `npm test`. All three are plain `node` invocations (`scripts/validate-examples.mjs`, `scripts/check-links.mjs`, and `poc/test/run-tests.mjs`) and can be called directly; all three run in CI on every pull request. The extension itself has no dependencies and no build step.
+
+`npm run conformance` runs the [conformance suite](conformance/README.md) — a specification-level test suite that any Lens Engine can run, not just this one. It reports pass, fail, or skipped per requirement, and an engine of your own reaches it by implementing [one adapter interface](conformance/ADAPTER.md) rather than by forking anything.
 
 ## Standards posture
 

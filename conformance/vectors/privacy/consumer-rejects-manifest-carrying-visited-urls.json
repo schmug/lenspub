@@ -1,0 +1,51 @@
+{
+  "id": "privacy/consumer-rejects-manifest-carrying-visited-urls",
+  "area": "privacy",
+  "title": "A consumer rejects a manifest carrying reading history rather than ignoring the extra member",
+  "rationale": "The schema rejecting the document is worth nothing if the consumer shrugs and reads the rest. A consumer that tolerates the member becomes the component that carries reading history onward into whatever it produces.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "security/privacy-model.md",
+    "section": "2.1",
+    "text": "Engines MUST validate manifests against the schema before publishing or exporting; the schema’s additionalProperties: false constraints make most violations mechanically detectable.",
+    "adr": "adr/0006-history-free-shareable-core.md"
+  },
+  "role": "manifest-consumer",
+  "check": "manifest.validate",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Privacy Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      },
+      "readingHistory": [
+        {
+          "url": "https://example-journal.example/articles/district-devices",
+          "readAt": "2026-07-08T09:14:00Z"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "accepted": false
+  }
+}

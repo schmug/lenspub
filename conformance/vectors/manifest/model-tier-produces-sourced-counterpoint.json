@@ -1,0 +1,82 @@
+{
+  "id": "manifest/model-tier-produces-sourced-counterpoint",
+  "area": "manifest",
+  "title": "A model-backed engine asked for automatic counterpoints produces at least one",
+  "rationale": "Also tier-scoped, and also a SKIP for the reference engine. Section 4.2 qualifies model-tier features with \"as declared capability permits\", so an implementer whose tier declares counterpoint support is the one this vector binds.",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lens-engine.md",
+    "section": "4.2",
+    "text": "Model tiers additionally provide, as declared capability permits ... sourced counterpoints per presentation.counterpoints (retrieval with attribution, never engine editorializing).",
+    "adr": "adr/0007-epistemic-stance.md"
+  },
+  "role": "lens-engine",
+  "requiresTier": [
+    "local-model",
+    "hosted-model",
+    "hybrid"
+  ],
+  "check": "interpret.result",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Engine Lens",
+        "lensVersion": "1.0.0"
+      },
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example"
+            }
+          ]
+        },
+        "presentation": {
+          "summaries": "brief",
+          "counterpoints": "auto"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "locked"
+      }
+    },
+    "content": {
+      "source": "https://example-journal.example/articles/district-devices",
+      "title": "School districts weigh where student data lives",
+      "blocks": [
+        {
+          "text": "The district is piloting local-first software that keeps student records on classroom machines rather than in a vendor cloud.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "An internal review found that 73 percent of teacher laptops were missing critical updates at the start of the school year.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "A state audit published in 2024 found gaps in vendor contracts, with 40 districts affected according to the published report.",
+          "tag": "p",
+          "linkCount": 2
+        }
+      ]
+    }
+  },
+  "expect": {
+    "assertions": [
+      {
+        "kind": "annotation-kind-present",
+        "annotationKind": "counterpoint",
+        "min": 1
+      }
+    ]
+  }
+}

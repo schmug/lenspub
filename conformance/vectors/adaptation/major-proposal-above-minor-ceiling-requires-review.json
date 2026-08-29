@@ -1,0 +1,36 @@
+{
+  "id": "adaptation/major-proposal-above-minor-ceiling-requires-review",
+  "area": "adaptation",
+  "title": "A major proposal is never auto-accepted, even under the most permissive preset",
+  "rationale": "explorer carries the highest ceiling the protocol defines, and it is still below major. There is no policy under which a major change may be applied without review, because autoAcceptCeiling cannot even represent the value.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "5",
+    "text": "Auto-acceptance applies only to proposals at or below the effective autoAcceptCeiling; acceptance above the ceiling without explicit review is a conformance violation.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "proposal.disposition",
+  "input": {
+    "policy": {
+      "name": "explorer",
+      "proposalFrequency": 5,
+      "evidenceThreshold": 2,
+      "autoAcceptCeiling": "minor",
+      "exploratoryProposalsPermitted": true
+    },
+    "proposal": {
+      "impact": "major",
+      "exploratory": false,
+      "origin": "user-feedback",
+      "evidenceCount": 5
+    }
+  },
+  "expect": {
+    "disposition": "require-review",
+    "conformanceViolationIf": [
+      "auto-accept"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "id": "anchoring/disambiguates-repeated-quote-by-context",
+  "area": "anchoring",
+  "title": "A quote occurring twice is disambiguated by prefix and suffix, not chosen arbitrarily",
+  "rationale": "The quote text alone matches at offset 13 and at offset 49. The selector names the second by its context; an engine that returns the first has silently chosen among ambiguous candidates, which the specification prohibits in the same sentence that requires disambiguation.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-engine.md",
+    "section": "5.2",
+    "text": "If a quote selector matches multiple spans, the engine MUST disambiguate using prefix/suffix or agreement with a subsequent selector; it MUST NOT silently choose among ambiguous candidates.",
+    "adr": "adr/0002-profile-web-annotation.md"
+  },
+  "role": "anchor-resolver",
+  "check": "anchor.resolve",
+  "input": {
+    "content": "Vendors sell local-first software. Districts buy local-first software instead.",
+    "selector": {
+      "type": "TextQuoteSelector",
+      "exact": "local-first software",
+      "prefix": "Districts buy ",
+      "suffix": " instead."
+    }
+  },
+  "expect": {
+    "status": "exact",
+    "resolvedOffsets": {
+      "start": 49,
+      "end": 69
+    }
+  }
+}

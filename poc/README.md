@@ -23,7 +23,7 @@ Optional, only if you want the overlay on local `file://` pages: open the extens
    - an **S** badge in the floating lens indicator (bottom right) for the document-level extractive summary.
 3. Click any highlight, margin badge, or dock badge to open the **explanation card**: annotation kind, body, the full Reasoning Trace, the basis (for evidence-class annotations), the anchor status (`exact` / `degraded` / `unanchored` / `document`), the manifest fields that triggered it (JSON Pointers), and the Reproducibility Envelope (engine, version, tier, execution location, model — `none (rule-based)`).
 4. The floating indicator shows the lens name, `lensVersion`, and a `local` execution badge; **Hide** toggles all overlays, **×** dismisses them entirely — highlights unwrap and the page's original text nodes are restored exactly.
-5. Back in the popup: per-tab annotation counts by kind, **Export manifest** (JSON download), **Import manifest…** (rejects files that are not structurally a Lens Manifest, with readable errors), and **Reset to bundled lens**.
+5. Back in the popup: per-tab annotation counts by kind, **Export manifest** (JSON download), **Import manifest…** (rejects anything that fails the normative manifest schema, with readable errors), and **Reset to bundled lens**.
 
 The overlay also runs on ordinary `http(s)` pages (content script at `document_idle`). On the demo page the *trusted-origin* evidence indicator does not fire — the page is not actually served from `example-journal.example`; that rule is exercised by the test suite. On pages whose markup whitespace differs from the extracted rendered text you will see anchors marked `degraded`: that is the robust-anchoring fallback of [ADR-0002](../adr/0002-profile-web-annotation.md) working, not an error.
 
@@ -35,12 +35,16 @@ npm install && npm test
 
 from the repository root (equivalently, `node poc/test/run-tests.mjs` once dependencies are installed). Plain Node asserts over the pure engine modules, then Ajv validation of the produced Interpretation Result and the bundled lens against the normative schemas in [`../schemas/`](../schemas/). Requires Node 18+ and the Ajv devDependencies declared in the root [`package.json`](../package.json); the extension itself needs neither.
 
+That suite tests this engine's internals. The specification-level bar any engine can meet is the [conformance suite](../conformance/README.md) — `npm run conformance` runs it against [`conformance-adapter.mjs`](conformance-adapter.mjs), which declares the `manifest-consumer`, `anchor-resolver`, and `lens-engine` roles at the `rule-based` tier. The vectors for the roles and tiers this PoC does not implement report **skipped**, never passed.
+
 ## What each component demonstrates
 
 | Path | Component (Glossary term) | Demonstrates |
 |---|---|---|
 | `manifest.json` | — | MV3 packaging: module service worker, content script, popup, `storage` permission only |
-| `engine/compile.js` | Manifest Compiler | Declarative manifest → engine-internal rules ([ADR-0001](../adr/0001-manifest-is-declarative-policy.md)); PoC-level import validation |
+| `engine/compile.js` | Manifest Compiler | Declarative manifest → engine-internal rules ([ADR-0001](../adr/0001-manifest-is-declarative-policy.md)); import validation |
+| `engine/schema-check.js`, `engine/lens-manifest.schema.js` | Manifest validator | Dependency-free check against a bundled verbatim copy of the normative schema ([Lens Manifest §2](../spec/lens-manifest.md)) |
+| `conformance-adapter.mjs` | Conformance adapter | This engine's side of the seam in [`../conformance/ADAPTER.md`](../conformance/ADAPTER.md) |
 | `engine/interpret.js` | Interpretation Pipeline | Rule-based interpretation producing schema-exact Interpretation Results with Reasoning Traces; evidence kinds carry a `basis`, never a verdict ([ADR-0007](../adr/0007-epistemic-stance.md)) |
 | `engine/anchor.js` | Anchor Manager | W3C TextQuoteSelector production and the exact → degraded → unanchored fallback ([ADR-0002](../adr/0002-profile-web-annotation.md)) |
 | `engine/envelope.js` | Reproducibility Envelope | Engine id/version/tier and execution location on every result ([ADR-0004](../adr/0004-reproducibility-envelope.md)) |
@@ -64,7 +68,7 @@ This is a deliberately narrow reference. It omits, with pointers to where each c
 - **Lens Diff** — no diff computation or rendering ([../spec/lens-diff.md](../spec/lens-diff.md), [../schemas/lens-diff.schema.json](../schemas/lens-diff.schema.json)).
 - **Model tiers** — no local-model, hosted-model, or hybrid interpretation; `engine/model-engine.stub.js` documents the seam and throws ([../spec/lens-engine.md](../spec/lens-engine.md)).
 - **Remote inference and its opt-in flow** — there is no remote execution path at all, hence no per-Domain-Scope opt-in UI, no `optInScope`, and no trust-boundary crossing to make visible ([ADR-0005](../adr/0005-local-only-default.md), [../security/privacy-model.md](../security/privacy-model.md)).
-- Also out of scope: Domain Scope classification of content, counterpoints and primary-source expansion (kinds exist in the schema; this tier never emits them), C2PA consumption, Solid hosting, AT Protocol subscription transport, SPA re-interpretation on client-side navigation, and full JSON Schema validation inside the extension (the import path checks structure only; the test suite does full validation).
+- Also out of scope: Domain Scope classification of content, counterpoints and primary-source expansion (kinds exist in the schema; this tier never emits them), C2PA consumption, Solid hosting, AT Protocol subscription transport, and SPA re-interpretation on client-side navigation.
 
 ## Known PoC limits
 

@@ -1,0 +1,50 @@
+{
+  "id": "privacy/reject-manifest-carrying-content-excerpt",
+  "area": "privacy",
+  "title": "A manifest carrying an excerpt of read content is rejected",
+  "rationale": "Placed inside metadata rather than at the top level, because a nested block is where an implementation would most plausibly leak one by accident. Every object in the manifest schema closes itself, so the rejection is reported at /metadata rather than at the root.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "security/privacy-model.md",
+    "section": "2.1",
+    "text": "Content excerpts, quotations, or content hashes of read material.",
+    "adr": "adr/0006-history-free-shareable-core.md"
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Privacy Lens",
+        "lensVersion": "1.0.0",
+        "lastReadExcerpt": "The district is piloting local-first software that keeps student records on classroom machines."
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      }
+    }
+  },
+  "expect": {
+    "valid": false,
+    "failsOn": {
+      "keyword": "additionalProperties",
+      "instancePath": "/metadata"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "anchoring/unanchored-when-quote-is-absent",
+  "area": "anchoring",
+  "title": "A quote that does not occur in the content resolves unanchored, never guess-anchored",
+  "rationale": "The single most important negative vector in the suite. The quote shares no phrase with the content, so no bounded edit-distance budget reaches it and there is no element structure at this seam for the ladder’s nearest-stable-ancestor step to fall back to. Any status other than unanchored means the engine placed an annotation somewhere its selectors did not verifiably identify. An engine that returns exact here has failed the invariant the whole anchoring section exists to protect.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-engine.md",
+    "section": "5.2",
+    "text": "An engine MUST NOT guess-anchor silently: displaying an annotation at a location the selectors did not verifiably identify, without a degraded or unanchored marking, is a conformance violation.",
+    "adr": "adr/0002-profile-web-annotation.md"
+  },
+  "role": "anchor-resolver",
+  "check": "anchor.resolve",
+  "input": {
+    "content": "Quarterly revenue rose across every region except the northern territories.",
+    "selector": {
+      "type": "TextQuoteSelector",
+      "exact": "local-first software",
+      "prefix": "is piloting ",
+      "suffix": " this term."
+    }
+  },
+  "expect": {
+    "status": "unanchored",
+    "prohibitedStatus": [
+      "exact"
+    ]
+  }
+}

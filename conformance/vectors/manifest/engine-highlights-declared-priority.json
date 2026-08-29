@@ -1,0 +1,87 @@
+{
+  "id": "manifest/engine-highlights-declared-priority",
+  "area": "manifest",
+  "title": "A declared priority that matches content produces a highlight citing the priority",
+  "rationale": "The rule-based floor: lexical matching is a sufficient implementation, so this vector is reachable by an engine with no model at all. The annotation-cites-pointer assertion is what stops an engine from passing by emitting an unrelated highlight.",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lens-engine.md",
+    "section": "4.2",
+    "text": "Topics in interpretation.priorities MUST produce highlight annotations where they match content; lexical matching is a sufficient floor."
+  },
+  "role": "lens-engine",
+  "check": "interpret.result",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Engine Lens",
+        "lensVersion": "1.0.0"
+      },
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "locked"
+      }
+    },
+    "content": {
+      "source": "https://example-journal.example/articles/district-devices",
+      "title": "School districts weigh where student data lives",
+      "blocks": [
+        {
+          "text": "The district is piloting local-first software that keeps student records on classroom machines rather than in a vendor cloud.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "An internal review found that 73 percent of teacher laptops were missing critical updates at the start of the school year.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "A state audit published in 2024 found gaps in vendor contracts, with 40 districts affected according to the published report.",
+          "tag": "p",
+          "linkCount": 2
+        }
+      ]
+    }
+  },
+  "expect": {
+    "assertions": [
+      {
+        "kind": "annotation-kind-present",
+        "annotationKind": "highlight",
+        "min": 1
+      },
+      {
+        "kind": "annotation-cites-pointer",
+        "pointer": "/interpretation/priorities/0"
+      },
+      {
+        "kind": "envelope-capability-tier-declared"
+      }
+    ]
+  }
+}

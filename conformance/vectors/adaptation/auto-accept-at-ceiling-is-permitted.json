@@ -1,0 +1,33 @@
+{
+  "id": "adaptation/auto-accept-at-ceiling-is-permitted",
+  "area": "adaptation",
+  "title": "A proposal at the effective ceiling may be auto-accepted",
+  "rationale": "The counterweight to the ceiling-violation vectors. Without it an engine that simply never auto-accepts anything would pass every auto-acceptance assertion in the suite, and the ceiling would be testing nothing.",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "5",
+    "text": "Auto-acceptance applies only to proposals at or below the effective autoAcceptCeiling.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "proposal.disposition",
+  "input": {
+    "policy": {
+      "name": "adaptive",
+      "proposalFrequency": 3,
+      "evidenceThreshold": 3,
+      "autoAcceptCeiling": "trivial",
+      "exploratoryProposalsPermitted": false
+    },
+    "proposal": {
+      "impact": "trivial",
+      "exploratory": false,
+      "origin": "user-feedback",
+      "evidenceCount": 4
+    }
+  },
+  "expect": {
+    "disposition": "auto-accept"
+  }
+}

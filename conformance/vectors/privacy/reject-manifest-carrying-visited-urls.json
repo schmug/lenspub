@@ -1,0 +1,55 @@
+{
+  "id": "privacy/reject-manifest-carrying-visited-urls",
+  "area": "privacy",
+  "title": "A manifest carrying URLs the user has read is rejected",
+  "rationale": "Data class 1 of Section 2.1, in the most direct form it can take. The schema stops it structurally: there is no member for it, and additionalProperties is false.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "security/privacy-model.md",
+    "section": "2.1",
+    "text": "URLs visited or any identifier of specific content the user has read.",
+    "adr": "adr/0006-history-free-shareable-core.md"
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Privacy Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      },
+      "readingHistory": [
+        {
+          "url": "https://example-journal.example/articles/district-devices",
+          "readAt": "2026-07-08T09:14:00Z"
+        }
+      ]
+    }
+  },
+  "expect": {
+    "valid": false,
+    "failsOn": {
+      "keyword": "additionalProperties",
+      "instancePath": ""
+    }
+  }
+}

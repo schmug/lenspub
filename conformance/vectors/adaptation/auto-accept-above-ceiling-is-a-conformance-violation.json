@@ -1,0 +1,36 @@
+{
+  "id": "adaptation/auto-accept-above-ceiling-is-a-conformance-violation",
+  "area": "adaptation",
+  "title": "A minor proposal under a policy whose ceiling is none MUST NOT be auto-accepted",
+  "rationale": "The specification names this exact case a conformance violation rather than a quality difference, and it is the boundary the whole parameterisation of ADR-0010 exists to make portable. An engine that returns auto-accept here is reported as a violation, not as a mismatch: it has silently changed a lens the user was promised would never silently change.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "2",
+    "text": "Auto-acceptance of a proposal above the effective autoAcceptCeiling is a conformance violation.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "proposal.disposition",
+  "input": {
+    "policy": {
+      "name": "balanced",
+      "proposalFrequency": 1,
+      "evidenceThreshold": 6,
+      "autoAcceptCeiling": "none",
+      "exploratoryProposalsPermitted": false
+    },
+    "proposal": {
+      "impact": "minor",
+      "exploratory": false,
+      "origin": "user-feedback",
+      "evidenceCount": 8
+    }
+  },
+  "expect": {
+    "disposition": "require-review",
+    "conformanceViolationIf": [
+      "auto-accept"
+    ]
+  }
+}

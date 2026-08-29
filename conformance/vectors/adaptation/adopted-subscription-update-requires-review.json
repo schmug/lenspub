@@ -1,0 +1,36 @@
+{
+  "id": "adaptation/adopted-subscription-update-requires-review",
+  "area": "adaptation",
+  "title": "An adopted subscription’s update is never auto-accepted",
+  "rationale": "Subscription updates do not count against proposalFrequency and may be surfaced under any policy, so the frequency budget is not what withholds auto-acceptance here — the impact class is. An adopted subscription’s update is classified major by Section 4, and major is above every ceiling the protocol can express.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "5",
+    "text": "Because they are classified at least minor (Section 4), an adopted subscription’s update (major) can never be auto-accepted.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "proposal.disposition",
+  "input": {
+    "policy": {
+      "name": "explorer",
+      "proposalFrequency": 5,
+      "evidenceThreshold": 2,
+      "autoAcceptCeiling": "minor",
+      "exploratoryProposalsPermitted": true
+    },
+    "proposal": {
+      "impact": "major",
+      "exploratory": false,
+      "origin": "subscription-update",
+      "subscriptionTrust": "adopted"
+    }
+  },
+  "expect": {
+    "disposition": "require-review",
+    "conformanceViolationIf": [
+      "auto-accept"
+    ]
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "id": "manifest/reject-embedded-prompt-text",
+  "area": "manifest",
+  "title": "A manifest carrying prompt text for direct model execution is rejected",
+  "rationale": "ADR-0001 makes \"a manifest is never a prompt\" a protocol invariant. The schema enforces it structurally through additionalProperties: false — an undeclared member is where a prompt would have to live. Note the limit, stated in conformance/README.md: the schema cannot detect prompt text typed into a declared free-text member such as a priority rationale.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/lens-manifest.md",
+    "section": "1",
+    "text": "A Lens Manifest MUST NOT consist of, or contain, prompt text intended for direct execution by a model.",
+    "adr": "adr/0001-manifest-is-declarative-policy.md"
+  },
+  "check": "schema.validate",
+  "input": {
+    "schema": "LensManifest",
+    "document": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Base Lens",
+        "lensVersion": "1.0.0"
+      },
+      "domains": [
+        {
+          "id": "health",
+          "label": "Health"
+        },
+        {
+          "id": "technology",
+          "label": "Technology"
+        }
+      ],
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9,
+            "rationale": "I want to notice who keeps data on the device."
+          }
+        ],
+        "sources": {
+          "trusted": [
+            {
+              "origin": "example-journal.example",
+              "note": "Editorially independent."
+            }
+          ],
+          "requireProvenance": [
+            "citations"
+          ]
+        },
+        "presentation": {
+          "summaries": "brief"
+        }
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      },
+      "prompt": "You are a reading assistant. Emphasise local-first software and be sceptical of vendor blogs."
+    }
+  },
+  "expect": {
+    "valid": false,
+    "failsOn": {
+      "keyword": "additionalProperties",
+      "instancePath": ""
+    }
+  }
+}

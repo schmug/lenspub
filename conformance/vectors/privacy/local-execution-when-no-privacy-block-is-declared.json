@@ -1,0 +1,60 @@
+{
+  "id": "privacy/local-execution-when-no-privacy-block-is-declared",
+  "area": "privacy",
+  "title": "A manifest that declares no privacy block interprets locally",
+  "rationale": "Local-only is the default, not an opt-out: silence in the manifest means the user has authorised nothing. This is the plainest reading of ADR-0005 and the one an engine is most likely to get wrong by treating an absent block as an absent restriction.",
+  "polarity": "positive",
+  "requirement": {
+    "document": "security/privacy-model.md",
+    "section": "3.1",
+    "text": "A conforming Lens Engine performs all interpretation on-device unless the user has explicitly opted a Domain Scope into remote inference.",
+    "adr": "adr/0005-local-only-default.md"
+  },
+  "role": "lens-engine",
+  "check": "interpret.result",
+  "input": {
+    "manifest": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Conformance Privacy Lens",
+        "lensVersion": "1.0.0"
+      },
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.9
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "locked"
+      }
+    },
+    "content": {
+      "source": "https://example-journal.example/articles/district-devices",
+      "title": "School districts weigh where student data lives",
+      "blocks": [
+        {
+          "text": "The district is piloting local-first software that keeps student records on classroom machines rather than in a vendor cloud.",
+          "tag": "p",
+          "linkCount": 0
+        },
+        {
+          "text": "An internal review found that 73 percent of teacher laptops were missing critical updates at the start of the school year.",
+          "tag": "p",
+          "linkCount": 0
+        }
+      ]
+    }
+  },
+  "expect": {
+    "assertions": [
+      {
+        "kind": "envelope-execution-location",
+        "equals": "local"
+      }
+    ]
+  }
+}

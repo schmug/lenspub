@@ -1,0 +1,35 @@
+{
+  "id": "adaptation/exploratory-proposal-is-never-auto-accepted",
+  "area": "adaptation",
+  "title": "An exploratory proposal requires review even at trivial impact under a permitting ceiling",
+  "rationale": "Every ordinary condition for auto-acceptance holds: the preset permits exploratory proposals, the impact sits at or below the ceiling. The exploratory flag alone is what withholds auto-acceptance, because an exploratory proposal is not backed by the user’s own accumulated feedback.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "5",
+    "text": "They MUST be marked as exploratory, count against the proposalFrequency budget, are exempt from evidenceThreshold, and MUST NOT be auto-accepted regardless of impact class.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "proposal.disposition",
+  "input": {
+    "policy": {
+      "name": "explorer",
+      "proposalFrequency": 5,
+      "evidenceThreshold": 2,
+      "autoAcceptCeiling": "minor",
+      "exploratoryProposalsPermitted": true
+    },
+    "proposal": {
+      "impact": "trivial",
+      "exploratory": true,
+      "origin": "user-feedback"
+    }
+  },
+  "expect": {
+    "disposition": "require-review",
+    "conformanceViolationIf": [
+      "auto-accept"
+    ]
+  }
+}

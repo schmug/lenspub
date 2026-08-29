@@ -1,0 +1,28 @@
+{
+  "id": "adaptation/impact-distrusted-source-addition-is-major",
+  "area": "adaptation",
+  "title": "Adding a distrusted source is major",
+  "rationale": "Symmetry with the minor rule for trusted additions is the trap: adding a trusted source at weight 0.5 or below is minor, and an engine that mirrors that rule onto the distrusted list under-classifies every one of them.",
+  "polarity": "negative",
+  "requirement": {
+    "document": "spec/adaptation-model.md",
+    "section": "4",
+    "text": "Major — everything else. This includes, without limitation ... additions to distrusted sources.",
+    "adr": "adr/0010-adaptation-policies-parameterized.md"
+  },
+  "role": "adaptation-engine",
+  "check": "impact.classify",
+  "input": {
+    "change": {
+      "op": "add",
+      "path": "/interpretation/sources/distrusted/0",
+      "after": {
+        "origin": "contentmill.example",
+        "weight": 1
+      }
+    }
+  },
+  "expect": {
+    "atLeast": "major"
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "id": "manifest/differ-compares-two-conforming-cores",
+  "area": "manifest",
+  "title": "A differ over two conforming manifest cores emits the changed field at its precise pointer",
+  "rationale": "metadata.lensVersion differs between the two inputs and MUST NOT appear as a change — it is version machinery excluded by Section 5.4, already carried by the from/to refs. A differ that reports it produces a diff whose change count disagrees with this vector.",
+  "polarity": "positive",
+  "requirement": {
+    "document": "spec/lens-diff.md",
+    "section": "2",
+    "text": "Differ — a component that takes two Lens Manifests and produces a Lens Diff. A Lens Diff produced by a conforming differ MUST validate against schemas/lens-diff.schema.json."
+  },
+  "role": "differ",
+  "check": "diff.produce",
+  "input": {
+    "from": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Diff Base Lens",
+        "lensVersion": "1.0.0"
+      },
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.4
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      }
+    },
+    "to": {
+      "lenspub": "0.1",
+      "type": "LensManifest",
+      "metadata": {
+        "name": "Diff Base Lens",
+        "lensVersion": "1.1.0"
+      },
+      "interpretation": {
+        "priorities": [
+          {
+            "topic": "local-first software",
+            "weight": 0.6
+          }
+        ]
+      },
+      "adaptation": {
+        "defaultPolicy": "balanced"
+      }
+    }
+  },
+  "expect": {
+    "refused": false,
+    "schemaValid": true,
+    "changeCount": 1,
+    "containsChange": {
+      "path": "/interpretation/priorities/0/weight",
+      "op": "replace",
+      "category": "priorities",
+      "impactAtLeast": "minor"
+    }
+  }
+}
