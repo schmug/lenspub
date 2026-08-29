@@ -55,11 +55,18 @@ the code under test is the code the page executes.
    record. A UI that *cannot quietly lose content* is a stronger claim than a
    spec sentence saying it must not.
 
-3. **v0.1 has no place to put a generated view.** The view kind is carried as
-   `extensions["spike:view"]`, because `interpretation.presentation` has no
-   `view` field. Is a generated view a presentation preference, or is it outside
-   the manifest entirely? Filed as
-   [issue #5](https://github.com/schmug/lenspub/issues/5).
+3. **A generated view belongs in `extensions` — resolved.** The spike carried the
+   view kind as `extensions["spike:view"]` because `interpretation.presentation`
+   has no `view` field, and asked whether that was a gap or the answer. It is the
+   answer: [issue #5](https://github.com/schmug/lenspub/issues/5) settled view
+   selection as an `extensions` concern, and the manifest specification now says
+   so normatively in
+   [§5.6](../spec/lens-manifest.md#56-interpretation-required) and
+   [§5.12](../spec/lens-manifest.md#512-extensions-optional), which works view
+   selection as its motivating example and states what the placement costs.
+   No field was added to `interpretation.presentation`; the spike's placement was
+   right, though `spike:view` does not follow §5.12's SHOULD of a
+   collision-resistant key.
 
 4. **Reordering is the unresolved tension.** Timeline, source-compare, and
    priority-cards all change order. The `MUST NOT ... reorder` rule is normative

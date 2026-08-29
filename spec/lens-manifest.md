@@ -120,6 +120,12 @@ The declarative interpretation policy: what to prioritize, whom to trust, and ho
 
 `explanationDisplay` controls display only. Reasoning Traces always exist in the Interpretation Result; a manifest cannot opt out of explainability, only out of its ambient visibility.
 
+Every member of `presentation` governs overlay behavior on a page that is already laid out: whether an overlay class renders, and in what verbosity. None of them governs the *arrangement* of the underlying material, and that omission is deliberate. **Selection of a rendered view kind** — presenting a set of records as a table, a timeline, a source grouping, or ranked cards rather than in the arrangement the content already has — is not a member of `presentation` and MUST NOT be expressed as one. The object is closed (`additionalProperties: false`), so a manifest that invents such a member is not a conforming Lens Manifest and a conforming consumer rejects it (Section 2). A producer that supports view selection MUST carry that intent under `extensions` (Section 5.12), which is the specified home for it.
+
+The reason is the reason [ADR-0001](../adr/0001-manifest-is-declarative-policy.md) gives for excluding prompts, one layer up. A view enum — `table`, `timeline`, `cards` — is the vocabulary of one user interface, bound to a device class and to an engine's rendering capability. A browser overlay, an e-reader, and a feed client do not have the same views available to name, and would not mean the same thing by a shared name if they did: `cards` is a lens's deliberate choice in one of them and the ambient layout in another. Every first-class manifest field denotes something an engine at any capability tier can decide it honors or declares unsupported, in a vocabulary belonging to no single implementation; that is what makes "any conforming engine can consume any conforming manifest" true rather than aspirational. A `view` field would instead be a field most engines could only ignore, whose meaning was fixed by whichever implementation's UI first spelled the enum. This is the shape of ADR-0001's objection to prompts: a prompt is portable-looking text whose meaning is set by one model family, and which diffs textually while denoting nothing the protocol can reason about. A view enum is portable-looking JSON whose meaning is set by one device class, and which the protocol can name but not interpret. Model-bound and interface-bound are the same defect at different layers, and the manifest's first-class vocabulary excludes both for the same reason.
+
+`extensions` exists for exactly this: intent that a subset of engines understand. Its ignore-unknown rule produces the correct degradation for a view an engine cannot render — the engine consumes the manifest, honors every field it does understand, and arranges content its own way — and Section 5.12 works view selection as its motivating example, including what the placement costs.
+
 ### 5.7 `adaptation` (REQUIRED)
 
 How readily the lens may evolve ([ADR-0010](../adr/0010-adaptation-policies-parameterized.md)). Learning is never silent: whatever the policy, changes occur only through the proposal workflow of the [Adaptation Model](adaptation-model.md), with notification and rollback unconditional.
@@ -166,6 +172,24 @@ The manifest's single extension point. Rules:
 - Extension data MUST satisfy the history-free rule of Section 3, and MUST NOT smuggle in what ADR-0001 excludes (weights, executable prompt text). "It was in `extensions`" is not a conformance defense.
 - Extension keys SHOULD be collision-resistant — a URI or reverse-DNS-style prefix — so independent extensions compose.
 - [Lens Diff](lens-diff.md) treats extension values as opaque: they diff by equality, not structurally.
+
+**Worked example — view selection.** The motivating case for this extension point, and the one that shows what it is and is not good for, is the selection of a rendered view kind: a lens whose author wants a set of records presented as a timeline rather than in the arrangement the content already carries. Section 5.6 excludes that choice from `interpretation.presentation`, because a view enum is one interface's vocabulary and a first-class field must be every conforming engine's. It travels here instead:
+
+```json
+"extensions": {
+  "https://vendor.example/ns/view": { "kind": "timeline" }
+}
+```
+
+An engine that recognizes the key MAY honor it, subject without exception to the overlay invariants of the [LensPub Protocol](lenspub-protocol.md), Sections 6.2 and 7.3: this extension point relaxes none of them, and "an extension asked for it" is no more a conformance defense than "it was in `extensions`" (second rule above). An engine that does not recognize it ignores the entry by the first rule above: the manifest is conforming, it is accepted rather than rejected, every field the engine does understand still applies, and the engine renders its own arrangement. That is the degradation this extension point exists to produce, and for a preference no two device classes can be relied on to share, it is the correct one.
+
+**What this placement costs.** The argument against it is genuine and is not disposed of here. A reader who wants their material arranged as a timeline has expressed durable interpretation intent — on one reading, the thing a lens is most for — and three consequences follow from parking it in `extensions`:
+
+- *It does not travel.* Another engine ignores it by rule, so the same lens presents differently in different places. That is precisely the portability the manifest otherwise guarantees, spent at the point a user is most likely to notice its absence.
+- *[Lens Diff](lens-diff.md) reports the change but cannot read it.* Extension values diff by equality at the deepest common pointer, so a switch from one view to another appears as a replaced opaque value in the `extensions` category, and because a differ MUST NOT interpret extension content, the REQUIRED `summary` on that change can only report that an opaque value changed. A `presentation` edit yields "summary verbosity changed from brief to detailed"; this one yields nothing so legible, in the review screens the [Adaptation Model](adaptation-model.md) depends on.
+- *The impact class rises.* The `trivial` class is defined over changes confined to `/interpretation/presentation` ([Adaptation Model](adaptation-model.md), Section 4); a change under `/extensions` falls outside it and takes the residual classification there. A view switch is therefore reviewed like a policy change rather than like a display setting.
+
+The decision accepts those costs. For engines to agree on a first-class `view` field it would have to be a fixed enum, and fixing the enum is what fails: it would write one device class's interface vocabulary into a protocol that a browser overlay, an e-reader, and a feed client are all meant to implement, and the field would then be one most engines could only decline to honor. An extension most engines ignore is a smaller failure than a normative field most engines cannot satisfy. It is also the reversible choice: a key that independent engines converge on in the wild would be evidence that a future version could promote to a first-class field, whereas an enum standardized ahead of that evidence cannot be withdrawn from the schema once manifests depend on it. This specification has no such evidence yet.
 
 ## 6. Versioning
 
