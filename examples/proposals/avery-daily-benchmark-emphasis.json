@@ -1,0 +1,50 @@
+{
+  "lenspub": "0.1",
+  "type": "LensChangeProposal",
+  "id": "lcp-2026-07-09-004",
+  "status": "pending",
+  "baseVersion": {
+    "id": "https://avery.example/lenses/avery-daily",
+    "name": "avery-daily",
+    "lensVersion": "1.4.2",
+    "hash": "c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2"
+  },
+  "changes": [
+    {
+      "op": "replace",
+      "path": "/interpretation/priorities/1/weight",
+      "before": 0.7,
+      "after": 0.9,
+      "category": "priorities",
+      "impact": "minor",
+      "summary": "Raises the emphasis on topic 'reproducible benchmarks' in the technical-research domain scope from 0.7 to 0.9."
+    },
+    {
+      "op": "add",
+      "path": "/interpretation/priorities/-",
+      "after": {
+        "topic": "webgpu benchmarks",
+        "weight": 0.4,
+        "domains": ["technical-research"],
+        "rationale": "Avery approved several annotations about browser-side inference throughput."
+      },
+      "category": "priorities",
+      "impact": "minor",
+      "summary": "Adds priority 'webgpu benchmarks' with weight 0.4 in the technical-research domain scope."
+    }
+  ],
+  "evidenceSummary": {
+    "supportingEvents": [
+      { "eventType": "approve-annotation", "domainScope": "technical-research", "count": 5 },
+      { "eventType": "request-more-of-topic", "domainScope": "technical-research", "count": 3 }
+    ],
+    "counterEvents": [
+      { "eventType": "reject-annotation", "domainScope": "technical-research", "count": 1 }
+    ]
+  },
+  "impact": "minor",
+  "shadowEvaluation": {
+    "offered": true,
+    "resultsRef": "shadow-lcp-2026-07-09-004"
+  }
+}

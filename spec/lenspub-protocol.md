@@ -45,7 +45,7 @@ The normative vocabulary for the entire LensPub repository is defined in the [Gl
 
 ## 3. Object Model
 
-LensPub defines four object types. Each is serialized as JSON [RFC 8259]. Three are governed by normative JSON Schemas (draft 2020-12) in [`../schemas/`](../schemas/); the fourth, `LensChangeProposal`, is defined normatively in the [Adaptation Model](./adaptation-model.md) specification. Where prose and schema could be read to disagree, the schema is authoritative for object structure.
+LensPub defines four object types. Each is serialized as JSON [RFC 8259] and is governed by a normative JSON Schema (draft 2020-12) in [`../schemas/`](../schemas/); field-level semantics for `LensChangeProposal` are given in the [Adaptation Model](./adaptation-model.md) specification. A governing schema says nothing about whether an object may be exchanged — that is the mobility class below — and two of the four are device-local, never exchanged between parties. Where prose and schema could be read to disagree, the schema is authoritative for object structure.
 
 Every object carries two discriminator members: `lenspub`, the protocol version (the string `"0.1"` for this draft; see Section 8), and `type`, the PascalCase object type name.
 
@@ -197,9 +197,9 @@ A Lens Diff compares two manifest versions — the same lens over time, one user
 
 ### 3.4 LensChangeProposal
 
-Governing specification: [Adaptation Model](./adaptation-model.md) (no standalone JSON Schema in v0.1). Mobility class: **device-local** (proposals are Adaptation State, [ADR-0006](../adr/0006-history-free-shareable-core.md)).
+Governing schema: [`../schemas/lens-change-proposal.schema.json`](../schemas/lens-change-proposal.schema.json). Mobility class: **device-local** (proposals are Adaptation State, [ADR-0006](../adr/0006-history-free-shareable-core.md)). Detailed field semantics: [Adaptation Model specification](./adaptation-model.md).
 
-A Lens Change Proposal is the only mechanism by which a Lens Manifest changes under adaptation. It carries the evidence that motivated it, the proposed change expressed as a Lens Diff with `comparison` set to `proposal-preview`, its impact classification, and the outcome of any shadow evaluation. An accepted proposal produces a new manifest version whose `versionHistory` entry references the proposal's identifier. The fragment below is illustrative; the normative field-level definition is in the [Adaptation Model](./adaptation-model.md).
+A Lens Change Proposal is the only mechanism by which a Lens Manifest changes under adaptation. It carries a stable identifier, the base manifest version it applies to, the proposed change as Lens Diff change objects, an aggregate summary of the explicit feedback events that motivated it, its impact classification, and optionally a shadow-evaluation offer or a reference to shadow-evaluation results. An accepted proposal produces a new manifest version whose `versionHistory` entry references the proposal's identifier. Engines present the change objects to the user as a Lens Diff with `comparison` set to `proposal-preview`; the proposal itself carries the fragment, not the rendered diff.
 
 ```json
 {
@@ -207,26 +207,24 @@ A Lens Change Proposal is the only mechanism by which a Lens Manifest changes un
   "type": "LensChangeProposal",
   "id": "urn:uuid:9f6a2c1e-3d47-4b8a-b1e2-5c0d8e7f4a21",
   "status": "pending",
-  "impact": "trivial",
-  "evidenceSummary": "Seven explicit feedback events favoring primary-source expansion.",
-  "diff": {
-    "lenspub": "0.1",
-    "type": "LensDiff",
-    "from": { "lensVersion": "1.4.0", "hash": "c41d9f2ab35d7e88" },
-    "to": { "lensVersion": "1.4.1" },
-    "comparison": "proposal-preview",
-    "changes": [
-      {
-        "op": "replace",
-        "path": "/interpretation/priorities/0/weight",
-        "before": 0.8,
-        "after": 0.9,
-        "category": "priorities",
-        "impact": "trivial",
-        "summary": "Raise the weight of 'primary sources' from 0.8 to 0.9."
-      }
+  "baseVersion": { "lensVersion": "1.4.0", "hash": "c41d9f2ab35d7e88" },
+  "changes": [
+    {
+      "op": "replace",
+      "path": "/interpretation/priorities/0/weight",
+      "before": 0.8,
+      "after": 0.9,
+      "category": "priorities",
+      "impact": "minor",
+      "summary": "Raise the weight of 'primary sources' from 0.8 to 0.9."
+    }
+  ],
+  "evidenceSummary": {
+    "supportingEvents": [
+      { "eventType": "approve-annotation", "count": 7 }
     ]
-  }
+  },
+  "impact": "minor"
 }
 ```
 
@@ -267,7 +265,7 @@ Requirements common to all three, kept deliberately minimal:
 - **Optional parameters.** `lenspub` — the protocol version of the enclosed document. When present, it MUST equal the document's `lenspub` member; on mismatch the document MUST be rejected.
 - **Fragment identifiers.** A fragment, when present, is interpreted as a JSON Pointer per Section 6 of [RFC 6901]. No other fragment semantics are defined.
 
-Servers hosting Published Lenses SHOULD serve manifests with `Content-Type: application/lens-manifest+json`. `LensChangeProposal` objects are device-local and have no media type in v0.1.
+Servers hosting Published Lenses SHOULD serve manifests with `Content-Type: application/lens-manifest+json`. `LensChangeProposal` objects are device-local and have no media type in v0.1, notwithstanding their governing schema: a media type names a serialization for exchange, and proposals are never exchanged.
 
 ## 6. Protocol Operations and Lifecycle
 

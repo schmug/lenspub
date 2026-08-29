@@ -26,13 +26,13 @@ The repository's register is IETF RFC / W3C specification: precise, sober, prose
 
 ## JSON examples must validate
 
-The three schemas in [`schemas/`](schemas/) are normative for object structure. Every JSON example in prose or in [`examples/`](examples/) must validate against the relevant schema before a PR is submitted. With Node.js 18+, run `npm install` once, then from the repository root:
+The four schemas in [`schemas/`](schemas/) are normative for object structure. Every JSON example in prose or in [`examples/`](examples/) must validate against the relevant schema before a PR is submitted. With Node.js 18+, run `npm install` once, then from the repository root:
 
 ```sh
 npm run validate
 ```
 
-That validates every example file in [`examples/`](examples/) and [`poc/lenses/`](poc/lenses/) — files you add under `examples/manifests/` or `examples/diffs/` are picked up automatically. To check a JSON example that lives inline in prose, validate it ad hoc:
+That validates every example file in [`examples/`](examples/) and [`poc/lenses/`](poc/lenses/) — files you add under `examples/manifests/`, `examples/diffs/`, or `examples/proposals/` are picked up automatically. It also checks the counter-examples in [`examples/proposals/counter-examples/`](examples/proposals/counter-examples/), which must be *rejected*, and rejected on the schema keyword each one exists to probe; a counter-example that starts validating is a schema that has stopped enforcing an invariant. To check a JSON example that lives inline in prose, validate it ad hoc:
 
 ```sh
 node -e "

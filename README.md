@@ -35,8 +35,8 @@ New here? Read these in order:
 | [`architecture/`](architecture/) | [Reference Architecture](architecture/architecture.md) · [Reference Implementation](architecture/reference-implementation.md) |
 | [`security/`](security/) | [Security Model](security/security-model.md) · [Privacy Model](security/privacy-model.md) · [Threat Model](security/threat-model.md) |
 | [`adr/`](adr/README.md) | The Architecture Decision Records freezing the constitutional decisions — 0001–0010 accepted, later numbers may be under review |
-| [`schemas/`](schemas/) | JSON Schemas for the three exchange objects |
-| [`examples/`](examples/) | Five example manifests, an example diff, and the [end-to-end worked example](examples/worked-example/README.md) |
+| [`schemas/`](schemas/) | Normative JSON Schemas: [Lens Manifest](schemas/lens-manifest.schema.json) · [Lens Diff](schemas/lens-diff.schema.json) · [Interpretation Result](schemas/interpretation-result.schema.json) · [Lens Change Proposal](schemas/lens-change-proposal.schema.json) |
+| [`examples/`](examples/) | Five example manifests, an example diff, an example Lens Change Proposal with counter-examples that must fail validation, and the [end-to-end worked example](examples/worked-example/README.md) |
 | [`poc/`](poc/README.md) | Browser proof of concept — a working MV3 extension implementing the rule-based engine tier |
 | [`spike/`](spike/README.md) | Throwaway feasibility spikes, clearly labelled as such — not reference implementations |
 | [`GLOSSARY.md`](GLOSSARY.md) | Normative vocabulary used across every document |
