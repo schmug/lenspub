@@ -18,8 +18,8 @@ npm run conformance    # conformance/run.mjs — the protocol suite, vs the PoC 
 npm run conformance:self-test   # the conformance suite's own tests
 ```
 
-The first three run in CI (`.github/workflows/ci.yml`) on Node 18 and 22; the
-conformance scripts are not wired into CI yet.
+All five run in CI (`.github/workflows/ci.yml`) on Node 18 and 22, and a
+regression in any of them fails the build.
 
 `npm test` and `npm run conformance` answer different questions and must not be
 merged. The first tests *this engine's* internals; the second tests *the

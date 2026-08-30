@@ -1,4 +1,4 @@
-# Runs the repository's three checks on every pull request. The `gate` job
+# Runs the repository's checks on every pull request. The `gate` job
 # exists so branch rulesets can require one stable check name regardless of how
 # the Node matrix changes.
 name: CI
@@ -42,6 +42,12 @@ jobs:
 
       - name: Verify every Markdown cross-reference resolves
         run: npm run check-links
+
+      - name: Run the protocol conformance suite against the reference adapter
+        run: npm run conformance
+
+      - name: Verify the conformance suite still fails a deliberately permissive engine
+        run: npm run conformance:self-test
 
   gate:
     name: gate
