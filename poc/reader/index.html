@@ -1,0 +1,41 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'none'; img-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<title>LensPub — Your perspective, in view</title>
+<link rel="icon" href="icon.svg"><link rel="stylesheet" href="reader.css">
+<script type="module" src="reader.js"></script>
+</head>
+<body>
+<a class="skip" href="#article">Skip to article</a>
+<header class="topbar"><a class="brand" href="./"><span class="logo" aria-hidden="true">◉</span> lenspub <span class="lab">READING LAB</span></a><span class="local">● On your device · Rule-based</span></header>
+<main>
+<section class="intro"><div><p class="eyebrow">A DIFFERENT WAY TO READ</p><h1>Your perspective.<br>The author’s words.</h1><p>Bring your priorities to the page. See what your lens notices,<br class="desktop"> understand why, and keep the original intact.</p></div><div class="intro-note"><span>01 / READING LAB</span><p>An extension-free experiment<br>in user-owned interpretation.</p><small>No model. No account. No remote processing.</small></div></section>
+<div class="workspace">
+<aside class="controls" aria-label="Lens controls">
+<p class="eyebrow">YOUR LENS</p><h2>What matters to you?</h2><p class="muted">Choose a starting point, then make it yours.</p>
+<label for="preset">Starting lens</label><select id="preset"><option value="custom" disabled>Current / imported draft</option><option value="daily">Avery’s daily lens</option><option value="privacy">Privacy & local tools</option><option value="evidence">Citation signals</option></select>
+<div id="weights"></div>
+<label for="summary">Extractive summary</label><select id="summary"><option value="brief">Brief · extracts from 2 passages</option><option value="detailed">Detailed · extracts from 4 passages</option><option value="none">Off</option></select>
+<label class="check"><input id="evidence" type="checkbox" checked> Show evidence signals</label>
+<p class="hint">Positive priorities highlight literal matches. Zero or negative weights remove emphasis, never content.</p>
+<button id="preview" class="primary">Preview changes →</button>
+<div id="review" hidden><p class="eyebrow">PREVIEW · NOT APPLIED</p><p id="comparison"></p><div id="preview-details"></div><div class="actions"><button id="apply" class="primary">Apply lens</button><button id="cancel">Cancel</button></div></div>
+<div class="actions secondary"><button id="undo" disabled>Undo</button><button id="export">Export lens</button><button id="import">Import lens</button><button id="reset">Reset demo</button></div>
+<input id="file" type="file" accept="application/json,.json" hidden>
+<p class="hint">Session only. Reload restores the demo. Exports contain the Lens Manifest only; article text and results are never added. Imported free-text fields are preserved: review them before sharing.</p>
+</aside>
+<section class="reading" aria-label="Reading view">
+<div class="reader-toolbar"><div><span class="eyebrow" id="source-label">BUNDLED FICTIONAL ARTICLE</span><p id="active-name"></p></div><div class="actions"><button id="content">Use your text</button><button id="toggle" aria-pressed="true">Hide overlays</button></div></div>
+<p id="status" role="status" aria-live="polite">Loading local engine…</p>
+<div class="reader-grid"><div><article id="article" tabindex="-1"></article><p class="source-foot">Original text and order are preserved. Annotations are a separate layer.</p></div><aside class="annotations" aria-label="Lens annotations"><p class="eyebrow">THROUGH YOUR LENS</p><h2 id="count"></h2><div id="annotations"></div></aside></div>
+</section>
+</div>
+<footer>LensPub / A portable perspective, owned by you.<span>Reference engine 0.1.0 · Rule-based capability tier</span></footer>
+</main>
+<dialog id="why"><form method="dialog"><button class="close" aria-label="Close explanation">Close ×</button></form><p class="eyebrow">WHY THIS ANNOTATION?</p><h2 id="why-title"></h2><div id="why-body"></div></dialog>
+<dialog id="text-dialog"><form id="text-form"><h2>Bring your own words</h2><p>Paste plain text. Everything stays in this tab. HTML is displayed as text; URLs are not fetched. Pasted text has no hyperlink metadata, so citation signals are limited.</p><label for="text-title">Article title</label><input id="text-title" maxlength="160" value="My reading"><label for="text-input">Article text (up to 50,000 characters)</label><textarea id="text-input" rows="10" maxlength="50000" required></textarea><p id="text-error" role="alert"></p><div class="actions"><button type="submit" class="primary">Read this text</button><button id="text-cancel" type="button">Cancel</button></div></form></dialog>
+<dialog id="reset-dialog"><h2>Start fresh?</h2><p>Restore the bundled article and lens. This clears pending changes and undo history in this tab.</p><div class="actions"><button id="reset-confirm" class="primary">Reset now</button><button id="reset-cancel">Keep reading</button></div></dialog>
+</body></html>
