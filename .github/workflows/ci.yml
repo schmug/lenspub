@@ -49,11 +49,29 @@ jobs:
       - name: Verify the conformance suite still fails a deliberately permissive engine
         run: npm run conformance:self-test
 
+  browser:
+    name: Browser reading demo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reader-browser-screenshots
+          path: dist/reader-qa/
+
   gate:
     name: gate
-    needs: checks
+    needs: [checks, browser]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Require every matrix job to have succeeded
-        run: '[ "${{ needs.checks.result }}" = "success" ] || exit 1'
+        run: '[ "${{ needs.checks.result }}" = "success" ] && [ "${{ needs.browser.result }}" = "success" ] || exit 1'
