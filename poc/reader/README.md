@@ -4,7 +4,9 @@ An extension-free browser harness around the existing [reference engine](../READ
 
 ## Run the demo
 
-From the repository root, with Node 18 or later:
+For setup-free reading, download and double-click **lenspub-reader.html** from the delivered package. It contains the same reader and real rule engine. A modern browser is the only runtime prerequisite; no Node or server is needed. Browser or organizational policies may prohibit local HTML files.
+
+For optional HTTP mode, from the repository root with Node 18 or later:
 
 ```sh
 npm run demo
@@ -12,7 +14,9 @@ npm run demo
 
 Open **http://localhost:4173/reader/**. No dependency installation, build step, service account, extension, or API key is needed to run the demo. `PORT` changes the port; `HOST` changes the default loopback binding. Stop the server with Ctrl+C. The static host exposes only reader assets and engine modules, not the repository.
 
-For a portable package (requires Python 3), run `npm run demo:package` and extract `dist/lenspub-reader.zip`. Run `node scripts/serve-reader.mjs` from the extracted directory, then open the same address. The archive includes its own instructions and license.
+To rebuild the standalone file, run `npm ci` then `npm run demo:standalone` (Node 18+). To build the complete package, also have Python 3 and run `npm run demo:package`. The resulting `dist/lenspub-reader.zip` includes `lenspub-reader.html`, the optional server sources, available QA evidence, instructions, and license.
+
+The [build script](../../scripts/build-reader.mjs) bundles the actual engine imports using esbuild. The single file permits only its exact script and style hashes under CSP, with network connections, other scripts, external images, and form submission blocked. It does not use `unsafe-inline`, `unsafe-eval`, data-URL scripts, a model substitute, or runtime CDN dependencies.
 
 ## One interaction to try
 
@@ -30,7 +34,7 @@ The article is adapted from the existing [fictional demo fixture](../demo/demo.h
 
 CSS Custom Highlights paint ranges without wrapping, rewriting, hiding, or reordering source nodes. Browsers without that API retain the separate annotation panel and display an explicit fallback notice. The interface supports keyboard navigation, dialog focus restoration, and narrow screens. Browser QA currently covers Chromium; other browser engines have not been exercised.
 
-The controls perform manual edits, not automatic learning, protocol Lens Change Proposals, or a conformant Lens Diff. Local edits bump the patch version and discard publisher identity, stale modification metadata, proof, and version history. Import preserves the supplied manifest until explicitly edited. The UI does not verify signatures, execute subscriptions, classify Domain Scopes, or honor remote-execution requests. The engine's existing rule-tier limits still apply (including 50 annotations and literal topic matching).
+The controls perform manual edits, not automatic learning, protocol Lens Change Proposals, or a conformant Lens Diff. Local edits bump the patch version and discard publisher identity, stale modification metadata, proof, and version history. Import preserves the supplied manifest through repeated Preview, Apply, and Export until controls are explicitly edited. A changed imported draft increments its own version, not the previously applied lens version; reverting its controls preserves the original manifest. Cancel, Undo, Apply, and Reset establish fresh draft baselines. The UI does not verify signatures, execute subscriptions, classify Domain Scopes, or honor remote-execution requests. The engine's existing rule-tier limits still apply (including 50 annotations and literal topic matching).
 
 Exports never add article text, results, or reading events. The existing manifest validator does not semantically detect reading history hidden in arbitrary free text or extension values. Imported text remains user-supplied: inspect it before sharing. The demo is not a privacy scrubber for arbitrary imported manifests.
 
@@ -42,10 +46,11 @@ No reordering is implemented. [ADR-0011](../../adr/0011-overlay-invariants-bind-
 npm ci
 npx playwright install chromium
 npm run test:browser
+npm run test:standalone
 ```
 
-If Chromium is already installed, use `CHROMIUM_PATH=/path/to/chromium npm run test:browser`. The test runner starts and stops an isolated loopback server on port 4174 (`QA_PORT` overrides it). Screenshots are written to `dist/reader-qa/`.
+If Chromium is already installed, use `CHROMIUM_PATH=/path/to/chromium npm run test:browser`. The test runner starts and stops an isolated loopback server on port 4174 (`QA_PORT` overrides it). Screenshots are written to `dist/reader-qa/`; the standalone suite builds the HTML, opens it with `file://`, and writes to `dist/reader-file-qa/`. Both suites are required in CI. Managed browsers that prohibit `file://` cannot execute the standalone test; use the CI result rather than disabling browser policy.
 
-The scenarios cover first render, keyboard Why/Escape, preview/apply/undo/cancel, keyboard range controls, repeated switching, source DOM preservation, export/import, malformed/oversized/history-bearing inputs, canceled input, stale asynchronous file reads, inert untrusted content, reset/reload, mobile overflow, skip navigation, network/storage absence, and static-host path restrictions.
+The scenarios cover first render, keyboard Why/Escape, preview/apply/undo/cancel, keyboard range controls, repeated switching, source DOM preservation, export/import, malformed/oversized/history-bearing inputs, canceled input, stale asynchronous file reads, inert untrusted content, reset/reload, mobile overflow, skip navigation, network/storage absence, static-host path restrictions, import metadata preservation, edited/reverted imported drafts, and CSP rejection of unauthorized scripts and connections.
 
 The five existing repository checks remain separate: `npm test`, `npm run validate`, `npm run check-links`, `npm run conformance`, and `npm run conformance:self-test`.

@@ -8,6 +8,16 @@ const $ = (id) => document.getElementById(id);
 const clone = (value) => JSON.parse(JSON.stringify(value));
 let active = clone(baseManifest), draft = clone(active), pending = null;
 let history = [], result, fileEpoch = 0, visible = true;
+// Importing is not editing. Keep the draft's own baseline and origin separate
+// from the applied lens so repeated previews never rewrite imported metadata.
+let draftBase = clone(active), draftOrigin = 'active', draftControlsDirty = false;
+function setDraft(manifest, origin = 'active') {
+  draft = clone(manifest); draftBase = clone(manifest);
+  draftOrigin = origin; draftControlsDirty = false;
+}
+function markControlsChanged() {
+  draftControlsDirty = JSON.stringify(draft) !== JSON.stringify(draftBase);
+}
 const highlightSupport = !!(globalThis.CSS?.highlights && globalThis.Highlight);
 const say = (text) => { $('status').textContent = text; };
 const el = (tag, text, className) => {
@@ -41,7 +51,7 @@ function settings(preset = 'custom') {
     row.append(el('span', priority.topic), output); label.append(row);
     const input = el('input'); Object.assign(input, {type:'range', min:'-1', max:'1', step:'0.1', value:priority.weight, id:`weight-${index}`});
     input.addEventListener('input', () => {
-      invalidate(); priority.weight = Number(input.value); output.textContent = priority.weight.toFixed(1);
+      invalidate(); priority.weight = Number(input.value); output.textContent = priority.weight.toFixed(1); markControlsChanged();
       say('Draft changed. Preview to review; your applied lens is unchanged.');
     });
     $('weights').append(label, input);
@@ -123,7 +133,7 @@ function preview(candidate = draft) {
   say('Preview ready. Apply to change the lens, or cancel to keep reading.');
 }
 $('preset').addEventListener('change', () => {
-  invalidate(); draft = clone(baseManifest);
+  invalidate(); setDraft(baseManifest, 'preset');
   if ($('preset').value === 'privacy') {
     draft.metadata.name = 'Privacy & local tools';
     draft.interpretation.priorities = draft.interpretation.priorities.filter((p) => ['data privacy','local-first software'].includes(p.topic));
@@ -136,17 +146,21 @@ $('preset').addEventListener('change', () => {
 });
 for (const id of ['summary','evidence']) $(id).addEventListener('change', () => {
   invalidate(); draft.interpretation.presentation ||= {};
-  draft.interpretation.presentation.summaries = $('summary').value;
-  draft.interpretation.presentation.evidenceIndicators = $('evidence').checked;
+  if (id === 'summary') draft.interpretation.presentation.summaries = $('summary').value;
+  else draft.interpretation.presentation.evidenceIndicators = $('evidence').checked;
+  markControlsChanged();
   say('Draft changed. Preview before applying.');
 });
 $('preview').addEventListener('click', () => {
   invalidate();
   // Manual edits form a new local version; no timestamps or reading data added.
   const candidate = clone(draft);
-  if (JSON.stringify(candidate) !== JSON.stringify(active)) {
+  const presetChanged = draftOrigin === 'preset' && JSON.stringify(candidate) !== JSON.stringify(active);
+  if (draftControlsDirty || presetChanged) {
     delete candidate.id; // Local edits do not claim the publisher's identity.
-    candidate.metadata.lensVersion = `${active.metadata.lensVersion.split('.')[0]}.${active.metadata.lensVersion.split('.')[1]}.${BigInt(active.metadata.lensVersion.split('.')[2]) + 1n}`;
+    const versionBase = draftOrigin === 'preset' ? active : draftBase;
+    const [major, minor, patch] = versionBase.metadata.lensVersion.split('.');
+    candidate.metadata.lensVersion = `${major}.${minor}.${BigInt(patch) + 1n}`;
     delete candidate.metadata.publisher;
     delete candidate.metadata.modified;
     delete candidate.versionHistory;
@@ -157,15 +171,15 @@ $('preview').addEventListener('click', () => {
 $('apply').addEventListener('click', () => {
   if (!pending) return;
   history.push(clone(active)); if (history.length > 20) history.shift();
-  active = clone(pending); draft = clone(active); invalidate(); settings(); render();
+  active = clone(pending); setDraft(active); invalidate(); settings(); render();
   say('Lens applied. Your source text is unchanged. Undo restores the previous lens.');
 });
 $('cancel').addEventListener('click', () => {
-  invalidate(); draft = clone(active); settings(); say('Preview canceled. Applied lens unchanged.'); $('preview').focus();
+  invalidate(); setDraft(active); settings(); say('Preview canceled. Applied lens unchanged.'); $('preview').focus();
 });
 $('undo').addEventListener('click', () => {
   if (!history.length) return;
-  invalidate(); active = history.pop(); draft = clone(active); settings(); render(); say('Previous lens restored.');
+  invalidate(); active = history.pop(); setDraft(active); settings(); render(); say('Previous lens restored.');
 });
 $('toggle').addEventListener('click', () => { setVisible(!visible); say(visible ? 'Overlays visible.' : 'Original view. All overlays hidden.'); });
 $('export').addEventListener('click', () => {
@@ -185,7 +199,7 @@ $('file').addEventListener('change', async () => {
     const candidate = JSON.parse(text);
     const check = validateManifestShape(candidate);
     if (!check.ok) throw new Error(check.errors.slice(0,3).join(' '));
-    preview(candidate); draft = clone(candidate); settings();
+    preview(candidate); setDraft(candidate, 'import'); settings();
     say('Imported lens validated and staged. Review then Apply. No subscriptions, remote inference, or signature verification will run.');
   } catch (error) {
     if (epoch === fileEpoch) say(`Import refused. Applied lens unchanged. ${error.message}`);
@@ -208,7 +222,7 @@ $('text-form').addEventListener('submit', (event) => {
 $('reset').addEventListener('click', () => { invalidate(); $('reset-dialog').showModal(); });
 $('reset-cancel').addEventListener('click', () => $('reset-dialog').close());
 $('reset-confirm').addEventListener('click', () => {
-  invalidate(); history = []; active = clone(baseManifest); draft = clone(active);
+  invalidate(); history = []; active = clone(baseManifest); setDraft(active);
   $('article').innerHTML = articleHTML; // Static, checked-in fixture only.
   $('source-label').textContent = 'BUNDLED FICTIONAL ARTICLE';
   $('preset').value = 'daily'; $('text-input').value = ''; $('text-title').value = 'My reading';

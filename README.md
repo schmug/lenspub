@@ -44,7 +44,7 @@ New here? Read these in order:
 
 ## Try it
 
-For an **extension-free reading demo**, run `npm run demo` (Node 18+, no install needed) and open http://localhost:4173/reader/. Choose a lens, preview and apply changes, inspect **Why?**, or paste your own plain text. This local rule-based harness preserves the source and uses no model or remote processing. See [Reading Lab instructions](poc/reader/README.md) for import/export, packaging, and browser tests.
+For an **extension-free reading demo**, double-click `lenspub-reader.html` in the delivered portable package (no setup), or run `npm run demo` (Node 18+, no install needed) and open http://localhost:4173/reader/. Choose a lens, preview and apply changes, inspect **Why?**, or paste your own plain text. This local rule-based harness preserves the source and uses no model or remote processing. See [Reading Lab instructions](poc/reader/README.md) for import/export, packaging, and browser tests.
 
 The proof of concept is a dependency-free Chrome/Chromium extension. Load `poc/` unpacked (chrome://extensions → Developer mode), open `poc/demo/demo.html`, and click any highlight to see the reasoning trace and reproducibility envelope behind it. Instructions: [`poc/README.md`](poc/README.md).
 

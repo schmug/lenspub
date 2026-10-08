@@ -12,11 +12,14 @@
     "conformance:self-test": "node conformance/self-test/run-self-test.mjs",
     "demo": "node scripts/serve-reader.mjs",
     "test:browser": "node poc/test/reader-browser.mjs",
-    "demo:package": "python3 scripts/package-reader.py"
+    "demo:package": "python3 scripts/package-reader.py",
+    "demo:standalone": "node scripts/build-reader.mjs",
+    "test:standalone": "node poc/test/reader-browser.mjs --standalone"
   },
   "devDependencies": {
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1",
+    "esbuild": "0.25.12",
     "playwright": "1.55.1"
   }
 }

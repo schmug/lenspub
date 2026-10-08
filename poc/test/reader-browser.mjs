@@ -4,22 +4,26 @@ import { chromium } from 'playwright';
 import { spawn } from 'node:child_process';
 import { mkdir, readFile } from 'node:fs/promises';
 import { once } from 'node:events';
+import { execFileSync } from 'node:child_process';
 const root = new URL('../../',import.meta.url);
 const port = process.env.QA_PORT || '4174';
+const standalone = process.argv.includes('--standalone');
+if (standalone) execFileSync(process.execPath,['scripts/build-reader.mjs'],{cwd:root,stdio:'inherit'});
+const readerURL = standalone ? new URL('dist/lenspub-reader.html',root).href : `http://127.0.0.1:${port}/reader/`;
 const server = spawn(process.execPath,['scripts/serve-reader.mjs'],{cwd:root,env:{...process.env,PORT:port},stdio:['ignore','pipe','inherit']});
 await once(server.stdout,'data');
 const browser = await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH ? {executablePath:process.env.CHROMIUM_PATH}:{}),args:['--no-sandbox']});
 let passed = 0;
 const check = async (name,fn) => {await fn(); passed++; console.log(`PASS ${name}`);};
-const dir = new URL('../../dist/reader-qa/',import.meta.url);
+const dir = new URL(standalone ? '../../dist/reader-file-qa/' : '../../dist/reader-qa/',import.meta.url);
 await mkdir(dir,{recursive:true});
 try {
   const page = await browser.newPage({viewport:{width:1440,height:1100}});
   const errors = [], remote = [];
   page.on('pageerror',e=>errors.push(e.message));
   page.on('console',msg=>{if(msg.type()==='error')errors.push(msg.text());});
-  page.on('request',req=>{if(!req.url().startsWith(`http://127.0.0.1:${port}/`))remote.push(req.url());});
-  await page.goto(`http://127.0.0.1:${port}/reader/`);
+  page.on('request',req=>{if(standalone ? req.url().split('#')[0] !== readerURL : !req.url().startsWith(`http://127.0.0.1:${port}/`))remote.push(req.url());});
+  await page.goto(readerURL);
   await page.waitForSelector('.annotation');
   const source = await page.locator('#article').innerHTML();
   const name = () => page.locator('#active-name').textContent();
@@ -81,6 +85,45 @@ try {
     assert.ok(!exported.includes('73 percent'));
     await importFile(exported);await page.waitForFunction(()=>document.getElementById('status').textContent.startsWith('Imported lens'));
     await click('apply');assert.match(await name(),new RegExp(manifest.metadata.lensVersion.replaceAll('.','\\.')));
+  });
+  const foreign = JSON.parse(fixture);
+  foreign.id = 'https://publisher.example/lenses/research';
+  foreign.metadata.name = 'Imported research lens';
+  foreign.metadata.lensVersion = '9.7.4';
+  foreign.metadata.publisher = {id:'did:example:publisher',name:'Example publisher'};
+  foreign.proof = {type:'DataIntegrityProof',proofValue:'test-only-unverified'};
+  foreign.versionHistory = [{lensVersion:'9.7.3',hash:'example-manifest-hash'}];
+  const exportManifest = async () => {
+    const event = page.waitForEvent('download'); await click('export');
+    return JSON.parse(await readFile(await (await event).path(),'utf8'));
+  };
+  const importForeign = async () => {
+    await importFile(JSON.stringify(foreign));
+    await page.waitForFunction(()=>document.getElementById('status').textContent.startsWith('Imported lens'));
+  };
+  await check('unmodified imported draft survives repeated Preview, Apply and Export intact',async()=>{
+    await importForeign(); await click('preview'); await click('preview'); await click('apply');
+    assert.deepEqual(await exportManifest(),foreign);
+    await click('undo');
+  });
+  await check('edited imported draft increments its own version once and removes stale attribution',async()=>{
+    await importForeign(); await page.selectOption('#summary','none');
+    await click('preview'); await click('preview'); await click('apply');
+    const expected = structuredClone(foreign);
+    expected.metadata.lensVersion = '9.7.5'; expected.interpretation.presentation.summaries = 'none';
+    delete expected.id; delete expected.metadata.publisher; delete expected.metadata.modified;
+    delete expected.versionHistory; delete expected.proof;
+    assert.deepEqual(await exportManifest(),expected);
+    await click('undo');
+  });
+  await check('reverted imported controls preserve original identity and cancel clears draft tracking',async()=>{
+    await importForeign(); await page.selectOption('#summary','none'); await page.selectOption('#summary','brief');
+    await click('preview'); await click('apply'); assert.deepEqual(await exportManifest(),foreign);
+    await click('undo');
+    const before = await exportManifest();
+    await importForeign(); await page.selectOption('#summary','none'); await click('preview'); await click('cancel');
+    await click('preview'); await click('apply'); assert.deepEqual(await exportManifest(),before);
+    await click('undo');
   });
   await check('invalid, oversized, history-bearing and canceled imports preserve active lens',async()=>{
     const before=await name();
@@ -145,5 +188,26 @@ try {
       assert.equal((await page.request.get(`http://127.0.0.1:${port}${path}`)).status(),404);
     }
   });
-  console.log(`\n${passed} browser scenarios passed; screenshots: dist/reader-qa/`);
+  await check('CSP blocks unauthorized scripts and network connections',async()=>{
+    const isolated = await browser.newPage(); await isolated.goto(readerURL); await isolated.waitForSelector('.annotation');
+    const policy = await isolated.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
+    assert.ok(!policy.includes('unsafe-inline') && !policy.includes('unsafe-eval'));
+    assert.match(policy,/connect-src 'none'/);
+    if(standalone) {
+      assert.match(policy,/script-src 'sha256-/); assert.match(policy,/style-src 'sha256-/);
+      assert.equal(await isolated.locator('script[src],link[rel="stylesheet"]').count(),0);
+    }
+    await isolated.evaluate(async()=>{
+      window.violations = [];
+      document.addEventListener('securitypolicyviolation',e=>window.violations.push(e.effectiveDirective));
+      const script=document.createElement('script');script.textContent='window.untrustedExecuted=true';document.body.append(script);
+      try { await fetch('https://example.invalid/forbidden'); } catch { window.fetchDenied=true; }
+    });
+    await isolated.waitForFunction(()=>window.violations.includes('script-src-elem') && window.violations.includes('connect-src'));
+    assert.equal(await isolated.evaluate(()=>window.untrustedExecuted),undefined);
+    assert.equal(await isolated.evaluate(()=>window.fetchDenied),true);
+    await isolated.close();
+  });
+  console.log(`\n${passed} browser scenarios passed (${standalone ? 'file://' : 'HTTP'}); screenshots: ${dir.pathname}`);
+
 } finally {await browser.close();server.kill();}
