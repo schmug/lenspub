@@ -16,10 +16,9 @@ npm run validate       # scripts/validate-examples.mjs — every JSON example vs
 npm run check-links    # scripts/check-links.mjs — every Markdown cross-reference resolves
 npm run conformance    # conformance/run.mjs — the protocol suite, vs the PoC adapter
 npm run conformance:self-test   # the conformance suite's own tests
-npm run zapper:test    # zapper/ — the semantic-zapper PoC's pure modules
 ```
 
-All six run in CI (`.github/workflows/ci.yml`) on Node 18 and 22, and a
+All five run in CI (`.github/workflows/ci.yml`) on Node 18 and 22, and a
 regression in any of them fails the build.
 
 `npm test` and `npm run conformance` answer different questions and must not be
@@ -90,11 +89,6 @@ touches them is substantive errata, not a fix.
   extension service worker and under Node in the test suite. Keep them that way.
 - Examples under `examples/` are validated by `npm run validate`; adding one means
   adding it to the target list in `scripts/validate-examples.mjs`.
-- `zapper/` is a separate proof of concept that **hides content**, so it is
-  deliberately *not* a LensPub engine (docs/explorations/semantic-zapper.md §5).
-  Never move it into `poc/`, wire it into `conformance/`, or describe it with
-  engine conformance language. Its lens saving does claim Manifest Producer
-  conformance, and `npm run zapper:test` checks that with Ajv.
 - `spike/` is throwaway demonstration code, clearly labelled. It is not the
   reference implementation and does not need to be conformant — but say so where
   it is not.

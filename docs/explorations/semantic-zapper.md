@@ -129,9 +129,9 @@ One more point. If the engine learns from what the reader restores or re-hides, 
 
 ## 8. A possible spike
 
-*A first build now exists: [`zapper/`](../../zapper/README.md). It implements the ledger, completeness check, before/after view, confidence and interest sliders, lens saving, the word-only baseline, and the local-model scorer over the Ollama and OpenAI-compatible APIs. It speaks llama-server's decision endpoint, and [`zapper/bench/`](../../zapper/bench/bench.mjs) measures questions 1 and 2 on the reader's own machine. It has not yet been run against Clef-flash or any real model, so both questions are still open.*
+*A first build now exists, in its own repository: [LensZap](https://github.com/schmug/lenszap), which began in this repository and moved out once it outgrew a proof of concept. It implements the ledger and its completeness check, the before/after view, the confidence and interest sliders, lens saving and direct lens editing, a training mode that suggests a threshold and weights from the reader's Keep/Zap marks, a word-only baseline, and a local-model scorer that speaks llama-server's decision endpoint as well as Ollama and OpenAI-compatible chat APIs. Its benchmark measures questions 1 and 2 on the reader's own machine. A first run with Kev-4B on a laptop hid none of ten on-lens passages and missed up to two of fourteen off-lens ones, at a median of about 1.2 seconds per block; Clef-flash has not been run, so both questions are still open for it.*
 
-The first build of the separate tool should be a spike, kept in the tool's own repository (or, if it starts here, in a clearly labelled directory outside `poc/`, as the [existing spike](../../spike/README.md) is labelled). It answers three questions with numbers:
+The first build of the separate tool should be a spike, kept in the tool's own repository. It answers three questions with numbers:
 
 1. **Is it fast enough?** Score a fixed set of bundled pages with Clef-flash at 4-bit through a local native host, and with an in-browser embedding baseline. Report time to first decision, time to full page, and memory use.
 2. **Is it accurate enough?** Hand-label the blocks of the fixture pages against a sample manifest, and report false-hide and false-keep rates at several thresholds, plus how stable those rates are across pages (a test of calibration).
