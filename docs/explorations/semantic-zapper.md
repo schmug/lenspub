@@ -1,14 +1,14 @@
-# Exploration: a semantic zapper engine
+# Exploration: a semantic zapper built on LensPub
 
 **Status:** Exploration · **Date:** 2026-11-01 · **License:** CC-BY 4.0
 
-*This document is informative and non-binding. It explores an alternative Lens Engine concept, records where it meets and where it breaks the published specification, and sketches a spike that would test it. It proposes no change to any ADR, specification, schema, or the constitution, and it does not use BCP 14 normative keywords except inside quotations. If any route described here is pursued, it enters the project through the processes in [GOVERNANCE.md](../../GOVERNANCE.md) Sections 3 and 4, not through this document.*
+*This document is informative and non-binding. It explores a zapper concept built on LensPub, records where it meets and where it breaks the published specification, and sketches a spike that would test it. It proposes no change to any ADR, specification, schema, or the constitution, and it does not use BCP 14 normative keywords except inside quotations. Nothing here changes the protocol; if Route C (Section 5.4) is ever pursued, it enters the project through the processes in [GOVERNANCE.md](../../GOVERNANCE.md) Sections 3 and 4, not through this document.*
 
 ## 1. The concept in one paragraph
 
 A small, fast decision model runs on the reader's device. When a page renders, the engine segments it into blocks (paragraphs, cards, list items, sidebars, comment threads), asks the model how well each block matches the reader's Lens Manifest priorities, and hides the blocks that fall below a confidence threshold, in the manner of uBlock Origin's element zapper. The reader adjusts that threshold and their interest weights with sliders, can flip between a before and an after view of the page, and has their slider positions remembered as they browse.
 
-The concept is attractive, and the parts that do not fit are worth stating precisely. **As described, it is not a conforming Lens Engine**: hiding content the model scores low is exactly what four normative statements and one rule-based-floor requirement prohibit (Section 4). Three routes remain open, with very different costs (Section 5). The reader controls the request asks for (sliders, before/after, saved interests) map onto the existing protocol cleanly, with two traps around history leakage (Section 6).
+The concept is attractive, and the parts that do not fit are worth stating precisely. **As described, it is not a conforming Lens Engine**: hiding content the model scores low is exactly what four normative statements and one rule-based-floor requirement prohibit (Section 4). The maintainer has chosen to build it as a **separate tool that reads and writes LensPub lenses**, honest about not being a Lens Engine and keeping every LensPub rule except the prohibition on hiding (Section 5). The reader controls the request asks for (sliders, before/after, saved interests) map onto the existing protocol cleanly, with two traps around history leakage (Section 6).
 
 ## 2. Where the idea comes from
 
@@ -58,35 +58,42 @@ Behind all five sits the constitution's [Non-Goals](../../constitution/DESIGN_HA
 
 [ADR-0011](../../adr/0011-overlay-invariants-bind-to-authored-content.md) does not help, whatever its outcome. It concerns *order* over a Record Set with no authored presentation, and it adds a completeness obligation that forbids filtering. A web page is Authored Rendered Content, the substrate on which every invariant binds unchanged.
 
-## 5. Three routes
+## 5. The chosen direction: a separate tool built on LensPub
 
-### 5.1 Route A — conformant today: the relevance veil
+After the first draft of this exploration, the maintainer chose the direction: the zapper is to be built as a **separate tool that reads and writes LensPub lenses**, not as a Lens Engine and not as an extension of the protocol. Automatic hiding is the point of the idea, and the alternatives either remove it (Section 5.4, Route A) or require amending the constitution (Section 5.4, Route C). This section sets out what that choice means.
 
-Keep everything except the default hide. The model's scores drive overlays only:
+### 5.1 What the tool is, in the protocol's terms
 
-- **Above threshold:** `highlight` annotations, as the rule-based floor already does lexically.
-- **Below threshold:** a quiet margin marker and a lowered overlay prominence, with the content left fully legible. The marker groups consecutive low-scoring blocks ("6 blocks below your lens") so the reader can skim past them.
-- **Focus, on request:** a per-page action the reader invokes, which collapses the low-scoring blocks behind visible, labelled placeholders until the page is left. Nothing collapses until the reader asks, on that page.
+The [conformance classes](../../spec/lenspub-protocol.md#71-conformance-classes) separate the handling of manifests from the application of manifests to content, and the tool sits across that line:
 
-The first two bullets are plainly conformant. The third is arguable: a collapse the reader asks for, each time, is not "by default" in the ordinary sense, and browser reader modes are precedent that user-invoked simplification is accepted practice. But "by default" is undefined in v0.1, and two implementers could read it differently, so it is the kind of question [GOVERNANCE.md Section 4](../../GOVERNANCE.md) routes to an issue before anything relies on it. A focus mode that turns itself on, or that the reader can set to "always," is not arguable; it is a default hide.
+- **Manifest Consumer: it can claim this.** It reads a reader's existing lens, validates it against [`schemas/lens-manifest.schema.json`](../../schemas/lens-manifest.schema.json), checks the `lenspub` version, and ignores unrecognized `extensions`. The same lens works in the reference engine and in the zapper.
+- **Manifest Producer: it can claim this.** When the reader moves an interest slider, the tool writes a new manifest version (Section 6.3). Everything it writes has to validate and stay history-free, which is what keeps the lens portable back into any conforming engine.
+- **Lens Engine: it cannot claim this.** Applying a manifest to content is the definition of an engine, and hiding content by default breaks the unconditional requirements every engine is bound by (Section 4.2).
 
-### 5.2 Route B — a sibling product that consumes manifests
+The class definitions say every class is bound by Protocol Section 7.3 "insofar as it handles the objects those requirements concern." A tool that claims only the manifest classes for its manifest handling, and says plainly that its page behavior is outside LensPub, is the honest reading. Whether claiming Consumer is even appropriate for software that then applies the manifest is a fair question for review; if the answer is no, the tool claims Producer only and says it reads the format.
 
-The manifest is an open format, and nothing stops a separate tool from reading a Lens Manifest and filtering pages with it. Such a tool is not a Lens Engine and cannot claim conformance, and [GOVERNANCE.md Section 5](../../GOVERNANCE.md) obliges this project to say so rather than blur it. This route is cheap and honest, and it gives the zapper idea a place to live without bending the protocol. Its cost is that the reader's lens now drives a filter, a use LensPub's own documents say a lens is not for.
+### 5.2 How it describes itself
 
-### 5.3 Route C — change the protocol
+[GOVERNANCE.md Section 5](../../GOVERNANCE.md) commits this project to describing itself accurately, and the tool inherits that if it lives anywhere near the project. The description that is true: *"Uses your LensPub lens. Not a LensPub engine: unlike one, it hides parts of pages."* It does not use LensPub conformance language for its page behavior, does not ship inside [`poc/`](../../poc/README.md) (which is the reference implementation of a conforming engine), and is not tested by the [conformance suite](../../conformance/README.md). A separate repository is the cleanest home; a clearly labelled directory in this repository is workable if it says the same thing at the top of its README.
 
-Make a reader-controlled filtering mode first-class. This is not a small change. It would contradict a constitutional Non-Goal and ADR-0007's stance, so it needs a constitutional amendment as well as a new ADR, under [GOVERNANCE.md Section 3](../../GOVERNANCE.md): a written proposal, at least 14 days of public review, and a recorded decision, with the dependent specification edits following only after acceptance.
+### 5.3 Which LensPub rules it keeps anyway
 
-If anyone writes that proposal, ADR-0011 shows the shape it would need: replace a prohibition with obligations that are at least as hard to violate silently, and are checkable. Candidates:
+Leaving the engine class releases the tool from exactly one rule, the prohibition on hiding. It has no reason to drop the others, and keeping them is what makes it trustworthy, and what would make a later protocol change (Route C) an argument from evidence rather than from hope:
 
-1. **A zap ledger with a completeness check.** Every hidden block is listed, with its trace, in a ledger the reader can open; the count of hidden blocks is always visible on the page; and a conformance check can verify that the hidden set equals the ledger, the same way the [spike](../../spike/README.md) verifies record completeness.
-2. **One-action restore**, per block and for the whole page, without a reload ([Lens Engine Section 6.3](../../spec/lens-engine.md#63-layering-and-dismissal) already requires per-page disable).
-3. **Never from a subscription.** A subscribed lens can never turn filtering on, consistent with the precedence rule that the user's own settings always win.
-4. **Evidence-class content is exempt.** A block the engine itself would mark as a counterpoint, correction, or primary source is never hidden.
-5. **Accessibility parity.** Hidden blocks remain reachable from the ledger by keyboard and assistive technology.
+1. **Local-only inference by default** ([ADR-0005](../../adr/0005-local-only-default.md)). Clef-flash or another on-device model; a hosted model like Jev only behind an explicit, per-domain opt-in.
+2. **History-free lenses** ([ADR-0006](../../adr/0006-history-free-shareable-core.md)). Per-site settings and anything learned from browsing stay in local storage, never in the manifest (Section 6.3).
+3. **A reasoning trace for every zap** ([ADR-0004](../../adr/0004-reproducibility-envelope.md)): which priority it was scored against, the probability, the threshold, and the model.
+4. **A zap ledger with a completeness check.** Every hidden block is listed in a ledger the reader can open, the count of hidden blocks is always on screen, and the tool checks after every render that the hidden set equals the ledger, the same way the [spike](../../spike/README.md) verifies record completeness.
+5. **One-action restore**, per block and for the whole page, without a reload, plus the before/after view of Section 6.2.
+6. **Evidence-class content is never zapped.** A block that is a correction, counterpoint, or primary source stays visible whatever its score. This is the tool's guard against the filter-bubble failure in Section 4.2.
+7. **Accessibility parity.** Hidden blocks stay reachable from the ledger by keyboard and assistive technology.
+8. **Explicit feedback only.** The tool learns from slider moves and explicit "more like this / less like this" actions, never from which blocks the reader restores or lingers on.
 
-This document's view is that Route A should be tried before Route C is proposed. If the relevance veil plus on-request focus delivers most of the value, the constitutional change is unnecessary.
+### 5.4 The routes not taken
+
+**Route A — a conformant relevance veil.** The model's scores drive overlays only: highlights above the threshold, a quiet grouped marker ("6 blocks below your lens") below it, and an optional per-page focus action that collapses low-scoring blocks only when the reader asks. This could live inside the existing PoC as a `local-model` engine. Whether an on-request collapse counts as "by default" is undefined in v0.1 and would be raised as an issue first under [GOVERNANCE.md Section 4](../../GOVERNANCE.md). It was set aside because, without automatic hiding, it is no longer a zapper. It remains the natural thing to build if the protocol's reference engine wants a local decision model.
+
+**Route C — change the protocol.** Make reader-controlled filtering first-class. That contradicts a constitutional Non-Goal and ADR-0007's stance, so it needs a constitutional amendment and a new ADR under [GOVERNANCE.md Section 3](../../GOVERNANCE.md), with at least 14 days of public review. If the separate tool works and keeps the rules in Section 5.3, its ledger, restore, and exemption rules are the obvious draft obligations for that proposal, modelled on how ADR-0011 (still under review) replaces a prohibition with checkable obligations. That would be a decision for later, made with evidence from the tool.
 
 ## 6. The reader controls
 
@@ -98,7 +105,7 @@ If a portable expression is wanted later, it should be in model-free terms ("sho
 
 ### 6.2 Before and after
 
-This is the cheapest and most valuable control, and every route above needs it. Because hiding is a style change, "before" is the untouched page; an engine switches the overlay stylesheet off, or shows the two side by side, or offers hold-to-peek. It is the visual form of the obligation proposed in ADR-0011 (still under review) to "make the input order available": the reader can always see what the lens did. Under Route A it shows highlights and markers on and off; under Routes B and C it is the main defense against false zaps.
+This is the cheapest and most valuable control, and the tool's main defense against false zaps. Because hiding is a style change, "before" is the untouched page; an engine switches the overlay stylesheet off, or shows the two side by side, or offers hold-to-peek. It is the visual form of the obligation proposed in ADR-0011 (still under review) to "make the input order available": the reader can always see what the lens did.
 
 ### 6.3 Interest sliders saved as you browse
 
@@ -115,14 +122,14 @@ One more point. If the engine learns from what the reader restores or re-hides, 
 - **Latency and layout.** A long article or feed page has hundreds of blocks. At 64 questions per call, a page is several calls; on a laptop, Clef-flash latency is unmeasured. Hiding after render causes visible reflow, and hiding before render means delaying the page. Caching decisions by block-content hash, scoring visible blocks first, and re-scoring on DOM mutation for infinite scroll all need measurement.
 - **Prompt injection through page text.** The model reads page content, and a page can contain text written to get itself kept, or to get a competitor's block hidden. Decision models narrow the output space, but they do not remove the attack. This belongs in the [threat model](../../security/threat-model.md) for any model-tier engine, and a filtering engine raises its stakes.
 - **Breakage.** Hiding containers breaks layouts, and a model has no idea that a block is a cookie-consent control, a paywall notice, or a legal disclosure. A non-content allowlist (forms, dialogs, navigation landmarks) would be required.
-- **Accessibility.** `display: none` removes content from the accessibility tree. Anything short of Route A must keep hidden content reachable.
+- **Accessibility.** `display: none` removes content from the accessibility tree. The tool keeps hidden content reachable from the ledger (Section 5.3).
 - **Privacy.** A hosted decision model sees every block of every page. Only local inference is compatible with the default.
 - **Reproducibility.** The same page, manifest, and slider can produce different hides across model versions and quantizations; the envelope must record all three.
-- **Scope creep toward a recommender.** Hiding what does not match the reader's interests is, functionally, a personalized feed applied to a page. That is the outcome the project's [vision](../vision.md) names as the one to avoid, and it is the strongest argument for Route A.
+- **Scope creep toward a recommender.** Hiding what does not match the reader's interests is, functionally, a personalized feed applied to a page. That is the outcome the project's [vision](../vision.md) names as the one to avoid, and it is the reason the tool sits outside the protocol rather than inside it.
 
 ## 8. A possible spike
 
-A throwaway spike under `spike/`, clearly labelled non-conformant where it is (as the [existing spike](../../spike/README.md) is), answering three questions with numbers:
+The first build of the separate tool should be a spike, kept in the tool's own repository (or, if it starts here, in a clearly labelled directory outside `poc/`, as the [existing spike](../../spike/README.md) is labelled). It answers three questions with numbers:
 
 1. **Is it fast enough?** Score a fixed set of bundled pages with Clef-flash at 4-bit through a local native host, and with an in-browser embedding baseline. Report time to first decision, time to full page, and memory use.
 2. **Is it accurate enough?** Hand-label the blocks of the fixture pages against a sample manifest, and report false-hide and false-keep rates at several thresholds, plus how stable those rates are across pages (a test of calibration).
@@ -132,7 +139,8 @@ The spike would bundle its fixtures and make no requests beyond the local model 
 
 ## 9. Open questions
 
-- What does "by default" mean in Protocol Section 7.3? Is a collapse the reader invokes on a page, each time, conformant? This is the question to raise as an issue first, because Route A's third bullet depends on it.
+- May a tool that applies a manifest to content claim the Manifest Consumer class for its manifest handling while disclaiming the Lens Engine class (Section 5.1)?
+- What does "by default" mean in Protocol Section 7.3? It no longer blocks this tool, but it decides whether Route A's on-request focus is conformant.
 - Is page chrome (ad slots, "related articles" rails, comment sections) "underlying content"? The specification does not distinguish it from the article, and a zapper aimed only at chrome is a smaller, different proposal.
 - Is a decision model's calibration stable enough across sites for a single slider to mean anything? Only the spike can say.
 
