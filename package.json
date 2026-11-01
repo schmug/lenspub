@@ -10,7 +10,8 @@
     "check-links": "node scripts/check-links.mjs",
     "conformance": "node conformance/run.mjs",
     "conformance:self-test": "node conformance/self-test/run-self-test.mjs",
-    "zapper:test": "node zapper/test/run-tests.mjs"
+    "zapper:test": "node zapper/test/run-tests.mjs",
+    "zapper:bench": "node zapper/bench/bench.mjs"
   },
   "devDependencies": {
     "ajv": "^8.20.0",
